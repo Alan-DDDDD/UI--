@@ -46,31 +46,31 @@ function DataMapPanel({ onAddNode }) {
       <div style={{margin: '10px 0'}}>
         <strong>欄位對應：</strong>
         {mapConfig.mappings.map((mapping, index) => (
-          <div key={index} style={{display: 'flex', gap: '5px', margin: '5px 0'}}>
+          <div key={index} className="mapping-row">
             <input 
               placeholder="來源欄位"
               value={mapping.from}
               onChange={(e) => updateMapping(index, 'from', e.target.value)}
-              style={{flex: 1}}
+              className="mapping-input"
             />
-            <span>→</span>
+            <span className="mapping-arrow">→</span>
             <input 
               placeholder="目標欄位"
               value={mapping.to}
               onChange={(e) => updateMapping(index, 'to', e.target.value)}
-              style={{flex: 1}}
+              className="mapping-input"
             />
             {mapConfig.mappings.length > 1 && (
               <button 
                 onClick={() => removeMapping(index)}
-                style={{background: '#dc3545', color: 'white', border: 'none', padding: '5px'}}
+                className="remove-mapping-btn"
               >
                 ✕
               </button>
             )}
           </div>
         ))}
-        <button onClick={addMapping} style={{fontSize: '12px', padding: '5px 10px'}}>
+        <button onClick={addMapping} className="add-mapping-btn">
           + 新增對應
         </button>
       </div>

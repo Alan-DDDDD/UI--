@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
+function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
   const [config, setConfig] = useState({});
+  const [tokens, setTokens] = useState([]);
 
   useEffect(() => {
     if (selectedNode) {
       setConfig({ ...selectedNode.data });
     }
+    loadTokens();
   }, [selectedNode]);
+
+  const loadTokens = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/tokens');
+      setTokens(response.data.tokens);
+    } catch (error) {
+      console.error('載入 Token 失敗:', error);
+    }
+  };
 
   if (!selectedNode) return null;
 
@@ -25,12 +37,19 @@ function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
     }
     
     // 更新標籤
-    if (selectedNode.data.type === 'http-request') {
-      updatedConfig.label = config.name || `${config.method} 請求`;
+    if (selectedNode.data.type === 'http-request' || selectedNode.data.type === 'line-push' || selectedNode.data.type === 'line-reply') {
+      updatedConfig.label = config.name || config.label || `${config.method} 請求`;
     } else if (selectedNode.data.type === 'notification') {
       updatedConfig.label = `通知：${config.message}`;
     } else if (selectedNode.data.type === 'data-map') {
       updatedConfig.label = config.name || '資料映射';
+    } else if (selectedNode.data.type === 'webhook-trigger') {
+      updatedConfig.label = config.name || 'Webhook觸發';
+    }
+    
+    // 確保LINE節點有正確的useDataFrom設定
+    if (selectedNode.data.type === 'line-push' || selectedNode.data.type === 'line-reply') {
+      updatedConfig.useDataFrom = 'custom';
     }
     
     onUpdateNode(selectedNode.id, updatedConfig);
@@ -136,6 +155,28 @@ function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
               💡 提示：可使用 {'{'}id{'}'} 來引用前一步的資料欄位
             </small>
             <div style={{margin: '10px 0'}}>
+              <label>🔑 Headers：</label>
+              <textarea 
+                placeholder='{
+  "Authorization": "Bearer {tokenName}",
+  "Content-Type": "application/json"
+}'
+                value={typeof config.headers === 'object' ? JSON.stringify(config.headers, null, 2) : ''}
+                onChange={(e) => {
+                  try {
+                    const headers = JSON.parse(e.target.value || '{}');
+                    setConfig({...config, headers});
+                  } catch (err) {
+                    // 如果 JSON 無效，保持原值
+                  }
+                }}
+                rows={4}
+              />
+              <small style={{color: '#666', fontSize: '12px'}}>
+                💡 可使用 {'{'}tokenName{'}'} 引用已儲存的 Token
+              </small>
+            </div>
+            <div style={{margin: '10px 0'}}>
               <label>📦 要發送的資料：</label>
               <select 
                 value={config.useDataFrom || 'none'}
@@ -161,23 +202,41 @@ function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
         return (
           <div>
             <h4>❓ 編輯條件檢查</h4>
-            <select 
-              value={getConditionType(config.condition)}
-              onChange={(e) => {
-                const conditions = {
-                  success: '$prev.success === true',
-                  failed: '$prev.success === false',
-                  error400: '$prev.error && $prev.error.includes("400")',
-                  error500: '$prev.error && $prev.error.includes("500")'
-                };
-                setConfig({...config, condition: conditions[e.target.value]});
-              }}
-            >
-              <option value="success">✅ 前一步執行成功</option>
-              <option value="failed">❌ 前一步執行失敗</option>
-              <option value="error400">⚠️ 發生400錯誤</option>
-              <option value="error500">🚨 發生500錯誤</option>
-            </select>
+            <div style={{marginBottom: '10px'}}>
+              <label>判斷欄位：</label>
+              <input 
+                placeholder="例如: {message} 或 {userId}"
+                value={config.field || ''}
+                onChange={(e) => setConfig({...config, field: e.target.value})}
+              />
+            </div>
+            <div style={{marginBottom: '10px'}}>
+              <label>判斷條件：</label>
+              <select 
+                value={config.operator || '=='}
+                onChange={(e) => setConfig({...config, operator: e.target.value})}
+              >
+                <option value="==">等於</option>
+                <option value="!=">不等於</option>
+                <option value="contains">包含</option>
+                <option value="not_contains">不包含</option>
+                <option value=">">&gt; 大於</option>
+                <option value="<">&lt; 小於</option>
+                <option value=">=">&gt;= 大於等於</option>
+                <option value="<=">&lt;= 小於等於</option>
+              </select>
+            </div>
+            <div style={{marginBottom: '10px'}}>
+              <label>比較值：</label>
+              <input 
+                placeholder="要比較的值"
+                value={config.value || ''}
+                onChange={(e) => setConfig({...config, value: e.target.value})}
+              />
+            </div>
+            <small style={{color: '#666', fontSize: '12px'}}>
+              💡 範例：欄位填 {'{'}message{'}'}, 條件選「包含」, 值填「你好」
+            </small>
           </div>
         );
 
@@ -204,37 +263,203 @@ function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
             />
             <div style={{margin: '10px 0'}}>
               <strong>欄位對應：</strong>
-              {(config.mappings || []).map((mapping, index) => (
-                <div key={index} style={{display: 'flex', gap: '5px', margin: '5px 0'}}>
+              {(config.mappings || [{from: '', to: ''}]).map((mapping, index) => (
+                <div key={index} className="mapping-row">
                   <input 
                     placeholder="來源欄位"
-                    value={mapping.from}
+                    value={mapping.from || ''}
                     onChange={(e) => {
-                      const newMappings = [...(config.mappings || [])];
-                      newMappings[index].from = e.target.value;
+                      const newMappings = [...(config.mappings || [{from: '', to: ''}])];
+                      newMappings[index] = {...newMappings[index], from: e.target.value};
                       setConfig({...config, mappings: newMappings});
                     }}
-                    style={{flex: 1}}
+                    className="mapping-input"
                   />
-                  <span>→</span>
+                  <span className="mapping-arrow">→</span>
                   <input 
                     placeholder="目標欄位"
-                    value={mapping.to}
+                    value={mapping.to || ''}
                     onChange={(e) => {
-                      const newMappings = [...(config.mappings || [])];
-                      newMappings[index].to = e.target.value;
+                      const newMappings = [...(config.mappings || [{from: '', to: ''}])];
+                      newMappings[index] = {...newMappings[index], to: e.target.value};
                       setConfig({...config, mappings: newMappings});
                     }}
-                    style={{flex: 1}}
+                    className="mapping-input"
                   />
+                  {(config.mappings || []).length > 1 && (
+                    <button 
+                      onClick={() => {
+                        const newMappings = (config.mappings || []).filter((_, i) => i !== index);
+                        setConfig({...config, mappings: newMappings});
+                      }}
+                      className="remove-mapping-btn"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               ))}
+              <button 
+                onClick={() => {
+                  const newMappings = [...(config.mappings || []), {from: '', to: ''}];
+                  setConfig({...config, mappings: newMappings});
+                }}
+                className="add-mapping-btn"
+              >
+                + 新增對應
+              </button>
             </div>
+          </div>
+        );
+      
+      case 'line-push':
+        return (
+          <div>
+            <h4>📱 編輯LINE推送</h4>
+            <input 
+              placeholder="動作名稱"
+              value={config.name || config.label || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value, label: e.target.value})}
+            />
+            <select
+              value={config.lineAccount || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                lineAccount: e.target.value,
+                headers: {
+                  'Authorization': `Bearer {${e.target.value}}`,
+                  'Content-Type': 'application/json'
+                }
+              })}
+            >
+              <option value="">選擇 LINE@ 帳號</option>
+              {tokens.map(token => (
+                <option key={token.key} value={token.key}>
+                  {token.name}
+                </option>
+              ))}
+            </select>
+            <input 
+              placeholder="用戶ID (可用{userId}引用)"
+              value={config.body?.to || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                body: {
+                  to: e.target.value,
+                  messages: [{
+                    type: 'text',
+                    text: config.body?.messages?.[0]?.text || ''
+                  }]
+                }
+              })}
+            />
+            <textarea 
+              placeholder="訊息內容"
+              value={config.body?.messages?.[0]?.text || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                body: {
+                  to: config.body?.to || '',
+                  messages: [{
+                    type: 'text',
+                    text: e.target.value
+                  }]
+                }
+              })}
+              rows={3}
+            />
+          </div>
+        );
+      
+      case 'line-reply':
+        return (
+          <div>
+            <h4>💬 編輯LINE回覆</h4>
+            <input 
+              placeholder="動作名稱"
+              value={config.name || config.label || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value, label: e.target.value})}
+            />
+            <select
+              value={config.lineAccount || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                lineAccount: e.target.value,
+                headers: {
+                  'Authorization': `Bearer {${e.target.value}}`,
+                  'Content-Type': 'application/json'
+                }
+              })}
+            >
+              <option value="">選擇 LINE@ 帳號</option>
+              {tokens.map(token => (
+                <option key={token.key} value={token.key}>
+                  {token.name}
+                </option>
+              ))}
+            </select>
+            <input 
+              placeholder="Reply Token (可用{replyToken}引用)"
+              value={config.body?.replyToken || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                body: {
+                  replyToken: e.target.value,
+                  messages: [{
+                    type: 'text',
+                    text: config.body?.messages?.[0]?.text || ''
+                  }]
+                }
+              })}
+            />
+            <textarea 
+              placeholder="回覆內容"
+              value={config.body?.messages?.[0]?.text || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                body: {
+                  replyToken: config.body?.replyToken || '',
+                  messages: [{
+                    type: 'text',
+                    text: e.target.value
+                  }]
+                }
+              })}
+              rows={3}
+            />
+          </div>
+        );
+      
+      case 'webhook-trigger':
+        return (
+          <div>
+            <h4>🔗 編輯Webhook觸發</h4>
+            <input 
+              placeholder="觸發名稱"
+              value={config.name || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value})}
+            />
+            <textarea 
+              placeholder="描述這個webhook的用途"
+              value={config.description || ''}
+              onChange={(e) => setConfig({...config, description: e.target.value})}
+              rows={2}
+            />
           </div>
         );
 
       default:
-        return <div>未知的節點類型</div>;
+        return (
+          <div>
+            <h4>編輯節點</h4>
+            <p>節點類型: {selectedNode.data.type}</p>
+            <input 
+              placeholder="節點名稱"
+              value={config.name || config.label || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value, label: e.target.value})}
+            />
+          </div>
+        );
     }
   };
 
@@ -259,6 +484,17 @@ function NodeEditor({ selectedNode, onUpdateNode, onClose }) {
         <div className="node-editor-footer">
           <button onClick={handleSave} className="save-btn">💾 儲存</button>
           <button onClick={onClose} className="cancel-btn">取消</button>
+          <button 
+            onClick={() => {
+              if (window.confirm('確定要刪除這個節點嗎？')) {
+                onDeleteNode(selectedNode.id);
+                onClose();
+              }
+            }} 
+            className="delete-btn"
+          >
+            🗑️ 刪除
+          </button>
         </div>
       </div>
     </div>

@@ -8,12 +8,24 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId }) {
 
   const saveWorkflow = async () => {
     try {
-      const response = await axios.post('http://localhost:3001/api/workflows', {
-        nodes,
-        edges
-      });
-      setWorkflowId(response.data.workflowId);
-      console.log('💾 流程已儲存，ID:', response.data.workflowId);
+      if (workflowId) {
+        // 更新現有流程
+        await axios.put(`http://localhost:3001/api/workflows/${workflowId}`, {
+          nodes,
+          edges
+        });
+        console.log('💾 流程已更新，ID:', workflowId);
+      } else {
+        // 創建新流程
+        const response = await axios.post('http://localhost:3001/api/workflows', {
+          name: '新流程',
+          description: '',
+          nodes,
+          edges
+        });
+        setWorkflowId(response.data.workflowId);
+        console.log('💾 流程已儲存，ID:', response.data.workflowId);
+      }
     } catch (error) {
       alert('儲存失敗: ' + error.message);
     }
