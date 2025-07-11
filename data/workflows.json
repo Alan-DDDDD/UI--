@@ -108,19 +108,16 @@
         "dragging": false
       },
       {
-        "id": "line-reply-1752198827255",
+        "id": "line-carousel-1752211392228",
         "type": "default",
         "position": {
-          "x": 312.25500841279654,
-          "y": 360.98552002763216
+          "x": 320.9492824028505,
+          "y": 364.35065631028147
         },
         "data": {
-          "label": "LINE回覆: 你他媽有病?",
-          "type": "line-reply",
+          "label": "LINE多頁",
+          "type": "line-carousel",
           "name": "",
-          "url": "https://api.line.me/v2/bot/message/reply",
-          "method": "POST",
-          "useDataFrom": "custom",
           "headers": {
             "Authorization": "Bearer {alan_line_msg_access_tkn}",
             "Content-Type": "application/json"
@@ -129,8 +126,121 @@
             "replyToken": "{replyToken}",
             "messages": [
               {
-                "type": "text",
-                "text": "你他媽有病?"
+                "type": "template",
+                "altText": "範本訊息",
+                "template": {
+                  "type": "carousel",
+                  "columns": [
+                    {
+                      "title": "標题1",
+                      "text": "內容1",
+                      "actions": [
+                        {
+                          "type": "message",
+                          "label": "選擇1",
+                          "text": "選擇1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn",
+          "templateType": "carousel"
+        },
+        "width": 150,
+        "height": 39,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 320.9492824028505,
+          "y": 364.35065631028147
+        },
+        "dragging": false
+      },
+      {
+        "id": "webhook-trigger-1752217035067",
+        "type": "default",
+        "position": {
+          "x": -213.8262194999121,
+          "y": 56.89808687848989
+        },
+        "data": {
+          "label": "LINE接收訊息",
+          "type": "webhook-trigger",
+          "name": "LINE接收訊息",
+          "description": ""
+        },
+        "width": 150,
+        "height": 39,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -213.8262194999121,
+          "y": 56.89808687848989
+        },
+        "dragging": false
+      },
+      {
+        "id": "condition-1752217051986",
+        "type": "default",
+        "position": {
+          "x": -244.0217639282112,
+          "y": 151.60248476508374
+        },
+        "data": {
+          "label": "條件: {message} contains 和潤",
+          "type": "condition",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "和潤"
+        },
+        "width": 150,
+        "height": 56,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -244.0217639282112,
+          "y": 151.60248476508374
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-carousel-1752217063226",
+        "type": "default",
+        "position": {
+          "x": -333.0149589580269,
+          "y": 297.7679584204881
+        },
+        "data": {
+          "label": "LINE多頁",
+          "type": "line-carousel",
+          "name": "",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "template",
+                "altText": "多頁訊息",
+                "template": {
+                  "type": "carousel",
+                  "columns": [
+                    {
+                      "title": "標题1",
+                      "text": "內容1",
+                      "actions": [
+                        {
+                          "type": "message",
+                          "label": "選擇1",
+                          "text": "選擇1"
+                        }
+                      ]
+                    }
+                  ]
+                }
               }
             ]
           },
@@ -139,22 +249,22 @@
         "width": 150,
         "height": 39,
         "selected": false,
-        "dragging": false,
         "positionAbsolute": {
-          "x": 312.25500841279654,
-          "y": 360.98552002763216
-        }
+          "x": -333.0149589580269,
+          "y": 297.7679584204881
+        },
+        "dragging": false
       },
       {
-        "id": "line-reply-1752199647776",
+        "id": "line-reply-1752217084530",
         "type": "default",
         "position": {
-          "x": 511,
-          "y": 184
+          "x": -137.95357528179966,
+          "y": 300.2684528227468
         },
         "data": {
+          "label": "LINE回覆: 你好，我們是和潤企業股份有限公...",
           "type": "line-reply",
-          "label": "LINE回覆: 我不懂你的意思",
           "name": "",
           "url": "https://api.line.me/v2/bot/message/reply",
           "method": "POST",
@@ -168,18 +278,101 @@
             "messages": [
               {
                 "type": "text",
-                "text": "我不懂你的意思"
+                "text": "你好，我們是和潤企業股份有限公司。\n請問有甚麼可以協助您呢?"
               }
             ]
           },
           "lineAccount": "alan_line_msg_access_tkn"
         },
         "width": 150,
-        "height": 56,
-        "selected": true,
+        "height": 73,
+        "selected": false,
         "positionAbsolute": {
-          "x": 511,
-          "y": 184
+          "x": -137.95357528179966,
+          "y": 300.2684528227468
+        },
+        "dragging": false
+      },
+      {
+        "id": "webhook-trigger-1752217118850",
+        "type": "default",
+        "position": {
+          "x": -543.0589555505948,
+          "y": 51.22705633157944
+        },
+        "data": {
+          "label": "LINE接收訊息",
+          "type": "webhook-trigger",
+          "name": "LINE接收訊息",
+          "description": ""
+        },
+        "width": 150,
+        "height": 39,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -543.0589555505948,
+          "y": 51.22705633157944
+        },
+        "dragging": false
+      },
+      {
+        "id": "condition-1752217130538",
+        "type": "default",
+        "position": {
+          "x": -596.6433218504104,
+          "y": 144.9514223701349
+        },
+        "data": {
+          "label": "條件: {message} contains 貸款",
+          "type": "condition",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "貸款"
+        },
+        "width": 150,
+        "height": 56,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -596.6433218504104,
+          "y": 144.9514223701349
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-reply-1752217143130",
+        "type": "default",
+        "position": {
+          "x": -583.6328505822056,
+          "y": 261.5858406410627
+        },
+        "data": {
+          "label": "LINE回覆: 你好，我收到妳貸款的需求，請問...",
+          "type": "line-reply",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "text",
+                "text": "你好，我收到妳貸款的需求，請問我們可以怎麼幫助您呢?"
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn"
+        },
+        "width": 150,
+        "height": 73,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -583.6328505822056,
+          "y": 261.5858406410627
         },
         "dragging": false
       }
@@ -209,16 +402,244 @@
       {
         "source": "condition-1752198752087",
         "sourceHandle": null,
-        "target": "line-reply-1752198827255",
+        "target": "line-carousel-1752211392228",
         "targetHandle": null,
-        "id": "reactflow__edge-condition-1752198752087-line-reply-1752198827255"
+        "id": "reactflow__edge-condition-1752198752087-line-carousel-1752211392228"
       },
       {
-        "source": "webhook-trigger-1752198682775",
+        "source": "webhook-trigger-1752217035067",
         "sourceHandle": null,
-        "target": "line-reply-1752199647776",
+        "target": "condition-1752217051986",
         "targetHandle": null,
-        "id": "reactflow__edge-webhook-trigger-1752198682775-line-reply-1752199647776"
+        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752217051986"
+      },
+      {
+        "source": "condition-1752217051986",
+        "sourceHandle": null,
+        "target": "line-carousel-1752217063226",
+        "targetHandle": null,
+        "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226"
+      },
+      {
+        "source": "condition-1752217051986",
+        "sourceHandle": null,
+        "target": "line-reply-1752217084530",
+        "targetHandle": null,
+        "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530"
+      },
+      {
+        "source": "webhook-trigger-1752217118850",
+        "sourceHandle": null,
+        "target": "condition-1752217130538",
+        "targetHandle": null,
+        "id": "reactflow__edge-webhook-trigger-1752217118850-condition-1752217130538"
+      },
+      {
+        "source": "condition-1752217130538",
+        "sourceHandle": null,
+        "target": "line-reply-1752217143130",
+        "targetHandle": null,
+        "id": "reactflow__edge-condition-1752217130538-line-reply-1752217143130"
+      }
+    ]
+  },
+  "5e74ad99-16cb-4fa5-8f95-6c53325a9b62": {
+    "nodes": [
+      {
+        "id": "webhook-trigger-1752215142573",
+        "type": "default",
+        "position": {
+          "x": -157.68810501448394,
+          "y": -100.44051732079691
+        },
+        "data": {
+          "label": "LINE收到訊息",
+          "type": "webhook-trigger",
+          "name": "LINE收到訊息",
+          "description": ""
+        },
+        "width": 150,
+        "height": 39,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -157.68810501448394,
+          "y": -100.44051732079691
+        },
+        "dragging": false
+      },
+      {
+        "id": "webhook-trigger-1752215164765",
+        "type": "default",
+        "position": {
+          "x": 140.71072661470055,
+          "y": -102.74291428820156
+        },
+        "data": {
+          "label": "LINE收到訊息",
+          "type": "webhook-trigger",
+          "name": "LINE收到訊息",
+          "description": ""
+        },
+        "width": 150,
+        "height": 39,
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 140.71072661470055,
+          "y": -102.74291428820156
+        }
+      },
+      {
+        "id": "condition-1752215175053",
+        "type": "default",
+        "position": {
+          "x": -167.97509791113214,
+          "y": -5.8759669663632685
+        },
+        "data": {
+          "label": "條件: {message} contains 和潤",
+          "type": "condition",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "和潤"
+        },
+        "width": 150,
+        "height": 56,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -167.97509791113214,
+          "y": -5.8759669663632685
+        },
+        "dragging": false
+      },
+      {
+        "id": "condition-1752215188237",
+        "type": "default",
+        "position": {
+          "x": 101.88672208629998,
+          "y": -7.168569877685229
+        },
+        "data": {
+          "label": "條件: {message} contains 貸款",
+          "type": "condition",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "貸款"
+        },
+        "width": 150,
+        "height": 56,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 101.88672208629998,
+          "y": -7.168569877685229
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-reply-1752215238839",
+        "type": "default",
+        "position": {
+          "x": -172.99999999999994,
+          "y": 117.80000000000007
+        },
+        "data": {
+          "type": "line-reply",
+          "label": "LINE回覆: 你好，我們是和潤企業股份有限公...",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "text",
+                "text": "你好，我們是和潤企業股份有限公司。\n請問有甚麼可以協助您呢?"
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn"
+        },
+        "width": 150,
+        "height": 73,
+        "selected": false,
+        "positionAbsolute": {
+          "x": -172.99999999999994,
+          "y": 117.80000000000007
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-reply-1752215293733",
+        "type": "default",
+        "position": {
+          "x": 91.37401312940011,
+          "y": 121.81041985143736
+        },
+        "data": {
+          "label": "LINE回覆: 你好，我收到妳貸款的需求，請問...",
+          "type": "line-reply",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "text",
+                "text": "你好，我收到妳貸款的需求，請問我們可以怎麼幫助您呢?"
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn"
+        },
+        "width": 150,
+        "height": 73,
+        "selected": true,
+        "positionAbsolute": {
+          "x": 91.37401312940011,
+          "y": 121.81041985143736
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "source": "webhook-trigger-1752215142573",
+        "sourceHandle": null,
+        "target": "condition-1752215175053",
+        "targetHandle": null,
+        "id": "reactflow__edge-webhook-trigger-1752215142573-condition-1752215175053"
+      },
+      {
+        "source": "webhook-trigger-1752215164765",
+        "sourceHandle": null,
+        "target": "condition-1752215188237",
+        "targetHandle": null,
+        "id": "reactflow__edge-webhook-trigger-1752215164765-condition-1752215188237"
+      },
+      {
+        "source": "condition-1752215175053",
+        "sourceHandle": null,
+        "target": "line-reply-1752215238839",
+        "targetHandle": null,
+        "id": "reactflow__edge-condition-1752215175053-line-reply-1752215238839"
+      },
+      {
+        "source": "condition-1752215188237",
+        "sourceHandle": null,
+        "target": "line-reply-1752215293733",
+        "targetHandle": null,
+        "id": "reactflow__edge-condition-1752215188237-line-reply-1752215293733"
       }
     ]
   }

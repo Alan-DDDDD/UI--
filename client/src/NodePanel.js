@@ -34,6 +34,12 @@ function NodePanel({ onAddNode }) {
       description: '回覆LINE訊息'
     },
     {
+      type: 'line-carousel',
+      icon: '🎠',
+      label: 'LINE多頁',
+      description: '多頁訊息卡片'
+    },
+    {
       type: 'webhook-trigger',
       icon: '🔗',
       label: 'Webhook觸發',
@@ -74,6 +80,28 @@ function NodePanel({ onAddNode }) {
         useDataFrom: 'custom',
         headers: { 'Authorization': 'Bearer ', 'Content-Type': 'application/json' },
         body: { replyToken: '', messages: [{ type: 'text', text: '' }] }
+      },
+      'line-carousel': {
+        label: 'LINE多頁',
+        name: '',
+        headers: { 'Authorization': 'Bearer ', 'Content-Type': 'application/json' },
+        body: {
+          replyToken: '{replyToken}',
+          messages: [{
+            type: 'template',
+            altText: '多頁訊息',
+            template: {
+              type: 'carousel',
+              columns: [
+                {
+                  title: '標题1',
+                  text: '內容1',
+                  actions: [{ type: 'message', label: '選擇1', text: '選擇1' }]
+                }
+              ]
+            }
+          }]
+        }
       },
       'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
       'notification': { label: '顯示訊息', message: '' }

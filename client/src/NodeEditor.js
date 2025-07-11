@@ -430,6 +430,145 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
           </div>
         );
       
+      case 'line-carousel':
+        return (
+          <div>
+            <h4>🎠 編輯LINE多頁訊息</h4>
+            <input 
+              placeholder="動作名稱"
+              value={config.name || config.label || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value, label: e.target.value})}
+            />
+            <select
+              value={config.lineAccount || ''}
+              onChange={(e) => setConfig({
+                ...config,
+                lineAccount: e.target.value,
+                headers: {
+                  'Authorization': `Bearer {${e.target.value}}`,
+                  'Content-Type': 'application/json'
+                }
+              })}
+            >
+              <option value="">選擇 LINE@ 帳號</option>
+              {tokens.map(token => (
+                <option key={token.key} value={token.key}>
+                  {token.name}
+                </option>
+              ))}
+            </select>
+            <div style={{margin: '10px 0'}}>
+              <label>訊息類型：</label>
+              <select 
+                value={config.messageType || 'reply'}
+                onChange={(e) => {
+                  const isReply = e.target.value === 'reply';
+                  setConfig({
+                    ...config, 
+                    messageType: e.target.value,
+                    body: {
+                      ...config.body,
+                      ...(isReply ? {replyToken: '{replyToken}'} : {to: '{userId}'})
+                    }
+                  });
+                }}
+              >
+                <option value="reply">回覆訊息</option>
+                <option value="push">推送訊息</option>
+              </select>
+            </div>
+            <div style={{margin: '10px 0'}}>
+              <label>範本類型：</label>
+              <select 
+                value={config.templateType || 'carousel'}
+                onChange={(e) => {
+                  const templates = {
+                    carousel: {
+                      type: 'carousel',
+                      columns: [{
+                        title: '標题1',
+                        text: '內容1',
+                        actions: [{type: 'message', label: '選擇1', text: '選擇1'}]
+                      }]
+                    },
+                    buttons: {
+                      type: 'buttons',
+                      text: '請選擇一個選項',
+                      actions: [
+                        {type: 'message', label: '選擇1', text: '選擇1'},
+                        {type: 'message', label: '選擇2', text: '選擇2'}
+                      ]
+                    },
+                    confirm: {
+                      type: 'confirm',
+                      text: '確定要執行這個操作嗎？',
+                      actions: [
+                        {type: 'message', label: '是', text: '確定'},
+                        {type: 'message', label: '否', text: '取消'}
+                      ]
+                    },
+                    imagemap: {
+                      type: 'imagemap',
+                      baseUrl: 'https://developers.line.biz/assets/img/messaging-api/imagemap/sample',
+                      baseSize: {width: 1040, height: 1040},
+                      actions: [
+                        {type: 'message', area: {x: 0, y: 0, width: 520, height: 520}, text: '左上'},
+                        {type: 'message', area: {x: 520, y: 0, width: 520, height: 520}, text: '右上'},
+                        {type: 'message', area: {x: 0, y: 520, width: 520, height: 520}, text: '左下'},
+                        {type: 'message', area: {x: 520, y: 520, width: 520, height: 520}, text: '右下'}
+                      ]
+                    }
+                  };
+                  setConfig({
+                    ...config,
+                    templateType: e.target.value,
+                    body: {
+                      ...config.body,
+                      messages: [{
+                        type: 'template',
+                        altText: templates[e.target.value].altText || '範本訊息',
+                        template: templates[e.target.value]
+                      }]
+                    }
+                  });
+                }}
+              >
+                <option value="carousel">🎠 輪播卡片 (Carousel)</option>
+                <option value="buttons">🔘 按鈕範本 (Buttons)</option>
+                <option value="confirm">❓ 確認範本 (Confirm)</option>
+                <option value="imagemap">🗺️ 圖片地圖 (Imagemap)</option>
+              </select>
+            </div>
+            <textarea 
+              placeholder={getTemplatePlaceholder(config.templateType || 'carousel')}
+              value={typeof config.body?.messages?.[0]?.template === 'object' ? 
+                JSON.stringify(config.body.messages[0].template, null, 2) : ''}
+              onChange={(e) => {
+                try {
+                  const template = JSON.parse(e.target.value);
+                  setConfig({
+                    ...config,
+                    body: {
+                      ...config.body,
+                      messages: [{
+                        type: 'template',
+                        altText: template.altText || '多頁訊息',
+                        template
+                      }]
+                    }
+                  });
+                } catch (err) {
+                  // JSON 無效時不更新
+                }
+              }}
+              rows={10}
+            />
+            <small style={{color: '#666', fontSize: '12px'}}>
+              {getTemplateHint(config.templateType || 'carousel')}
+            </small>
+          </div>
+        );
+      
       case 'webhook-trigger':
         return (
           <div>
@@ -469,6 +608,64 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
     if (condition && condition.includes('400')) return 'error400';
     if (condition && condition.includes('500')) return 'error500';
     return 'success';
+  };
+
+  const getTemplatePlaceholder = (templateType) => {
+    const templates = {
+      carousel: `{
+  "type": "carousel",
+  "columns": [
+    {
+      "title": "商品1",
+      "text": "商品描述",
+      "thumbnailImageUrl": "https://example.com/image1.jpg",
+      "actions": [
+        {"type": "message", "label": "購買", "text": "購買商品1"},
+        {"type": "uri", "label": "詳情", "uri": "https://example.com"}
+      ]
+    }
+  ]
+}`,
+      buttons: `{
+  "type": "buttons",
+  "text": "請選擇一個選項",
+  "thumbnailImageUrl": "https://example.com/image.jpg",
+  "actions": [
+    {"type": "message", "label": "選擇1", "text": "選擇1"},
+    {"type": "message", "label": "選擇2", "text": "選擇2"},
+    {"type": "uri", "label": "網站", "uri": "https://example.com"}
+  ]
+}`,
+      confirm: `{
+  "type": "confirm",
+  "text": "確定要刪除這筆資料嗎？",
+  "actions": [
+    {"type": "message", "label": "確定", "text": "確定刪除"},
+    {"type": "message", "label": "取消", "text": "取消操作"}
+  ]
+}`,
+      imagemap: `{
+  "type": "imagemap",
+  "baseUrl": "https://example.com/bot/images/rm001",
+  "altText": "點擊圖片互動",
+  "baseSize": {"width": 1040, "height": 1040},
+  "actions": [
+    {"type": "postback", "area": {"x": 0, "y": 0, "width": 520, "height": 1040}, "data": "action=buy&itemid=123"},
+    {"type": "message", "area": {"x": 520, "y": 0, "width": 520, "height": 1040}, "text": "查看詳情"}
+  ]
+}`
+    };
+    return templates[templateType] || templates.carousel;
+  };
+
+  const getTemplateHint = (templateType) => {
+    const hints = {
+      carousel: '💡 Carousel: 最多 10 個卡片，每個卡片最多 3 個按鈕',
+      buttons: '💡 Buttons: 最多 4 個按鈕，可加入圖片',
+      confirm: '💡 Confirm: 固定 2 個按鈕（是/否）',
+      imagemap: '💡 Imagemap: 在圖片上設定可點擊區域'
+    };
+    return hints[templateType] || hints.carousel;
   };
 
   return (

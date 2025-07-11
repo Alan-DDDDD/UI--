@@ -69,6 +69,30 @@ function App() {
           headers: { 'Authorization': 'Bearer ', 'Content-Type': 'application/json' },
           body: { replyToken: '', messages: [{ type: 'text', text: '' }] }
         },
+        'line-carousel': {
+          label: 'LINE多頁',
+          name: '',
+          templateType: 'carousel',
+          messageType: 'reply',
+          headers: { 'Authorization': 'Bearer ', 'Content-Type': 'application/json' },
+          body: {
+            replyToken: '{replyToken}',
+            messages: [{
+              type: 'template',
+              altText: '多頁訊息',
+              template: {
+                type: 'carousel',
+                columns: [
+                  {
+                    title: '商品1',
+                    text: '商品描述',
+                    actions: [{ type: 'message', label: '購買', text: '購買商品1' }]
+                  }
+                ]
+              }
+            }]
+          }
+        },
         'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
         'notification': { label: '顯示訊息', message: '' }
       };

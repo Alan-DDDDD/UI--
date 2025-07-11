@@ -313,6 +313,121 @@ async function executeNode(node, context) {
         return { success: false, error: `LINE推送失敗: ${error.message}` };
       }
     
+    case 'line-carousel':
+      const carouselAccessTokenTemplate = node.data.headers?.Authorization?.replace('Bearer ', '');
+      const carouselReplyToken = node.data.body?.replyToken;
+      const carouselUserId = node.data.body?.to;
+      const carouselData = node.data.body?.messages?.[0]?.template;
+      
+      if (!carouselAccessTokenTemplate) {
+        return { success: false, error: 'LINE Carousel失敗: 缺少 Access Token' };
+      }
+      
+      // 處理 Token 替換
+      let processedCarouselToken = carouselAccessTokenTemplate.replace(/\{([^}]+)\}/g, (match, key) => {
+        if (context[key]) return context[key];
+        if (tokens[key]) return tokens[key].token;
+        return match;
+      });
+      
+      // 檢查 template 資料
+      if (!carouselData || typeof carouselData !== 'object') {
+        return { success: false, error: 'LINE Carousel失敗: 缺少或無效的 template 資料' };
+      }
+      
+      // 處理 replyToken 替換
+      let carouselProcessedReplyToken = '';
+      if (carouselReplyToken) {
+        carouselProcessedReplyToken = carouselReplyToken.replace(/\{([^}]+)\}/g, (match, key) => {
+          return context[key] || context._lastResult?.data?.[key] || match;
+        });
+      }
+      
+      // 檢查 replyToken 是否已被使用
+      const isReplyTokenUsed = carouselProcessedReplyToken && context._usedReplyTokens && context._usedReplyTokens.has(carouselProcessedReplyToken);
+      
+      // 決定使用 reply 還是 push
+      const shouldUseReply = !!carouselReplyToken && !isReplyTokenUsed;
+      const apiUrl = shouldUseReply ? 
+        'https://api.line.me/v2/bot/message/reply' : 
+        'https://api.line.me/v2/bot/message/push';
+      
+      if (isReplyTokenUsed) {
+        console.log(`⚠️ Carousel ReplyToken 已被使用，改為 Push 模式: ${carouselProcessedReplyToken}`);
+      }
+      
+      let requestBody;
+      if (shouldUseReply) {
+        requestBody = {
+          replyToken: carouselProcessedReplyToken,
+          messages: [{
+            type: 'template',
+            altText: carouselData.altText || '多頁訊息',
+            template: carouselData
+          }]
+        };
+      } else {
+        // 使用 Push 模式
+        let userId = carouselUserId;
+        if (!userId) {
+          // 如果沒有設定 userId，從 context 取得
+          userId = context.userId || context._lastResult?.data?.userId;
+        }
+        if (!userId) {
+          return { success: false, error: 'LINE Carousel失敗: 無法取得用戶ID' };
+        }
+        
+        let processedUserId = userId.replace(/\{([^}]+)\}/g, (match, key) => {
+          return context[key] || context._lastResult?.data?.[key] || match;
+        });
+        
+        requestBody = {
+          to: processedUserId,
+          messages: [{
+            type: 'template',
+            altText: carouselData.altText || '多頁訊息',
+            template: carouselData
+          }]
+        };
+      }
+      
+      console.log(`📱 準備發送 LINE Carousel:`, JSON.stringify(requestBody, null, 2));
+      
+      try {
+        const response = await axios.post(apiUrl, requestBody, {
+          headers: {
+            'Authorization': `Bearer ${processedCarouselToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // 標記 replyToken 為已使用（如果使用了 reply 模式）
+        if (shouldUseReply && carouselProcessedReplyToken) {
+          if (!context._usedReplyTokens) {
+            context._usedReplyTokens = new Set();
+          }
+          context._usedReplyTokens.add(carouselProcessedReplyToken);
+        }
+        
+        console.log(`📱 LINE Carousel訊息成功（${shouldUseReply ? 'Reply' : 'Push'} 模式）`);
+        return { 
+          success: true, 
+          data: { 
+            type: 'line-carousel',
+            mode: shouldUseReply ? 'reply' : 'push',
+            timestamp: new Date().toISOString()
+          }
+        };
+      } catch (error) {
+        console.log(`❌ LINE Carousel API錯誤:`, {
+          status: error.response?.status,
+          data: error.response?.data,
+          accessToken: processedCarouselToken ? `${processedCarouselToken.substring(0, 10)}...` : 'undefined',
+          requestBody: JSON.stringify(requestBody, null, 2)
+        });
+        return { success: false, error: `LINE Carousel失敗: ${error.response?.status} ${error.message}` };
+      }
+    
     case 'line-reply':
       const lineAccessTokenTemplate = node.data.headers?.Authorization?.replace('Bearer ', '');
       const replyTokenTemplate = node.data.body?.replyToken;
@@ -345,6 +460,56 @@ async function executeNode(node, context) {
         });
       }
       
+      // 檢查 replyToken 是否已被使用
+      const isReplyTokenUsedInReply = context._usedReplyTokens && context._usedReplyTokens.has(processedReplyToken);
+      
+      if (isReplyTokenUsedInReply) {
+        console.log(`⚠️ ReplyToken 已被使用，改為 Push 模式: ${processedReplyToken}`);
+        // 改為 Push 模式
+        const userId = context.userId || context._lastResult?.data?.userId;
+        if (!userId) {
+          return { success: false, error: 'LINE推送失敗: 無法取得用戶ID' };
+        }
+        
+        try {
+          const response = await axios.post(
+            'https://api.line.me/v2/bot/message/push',
+            {
+              to: userId,
+              messages: [{
+                type: 'text',
+                text: processedMessage
+              }]
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${processedAccessToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          console.log(`📱 LINE推送訊息成功: ${processedMessage}`);
+          return { 
+            success: true, 
+            data: { 
+              type: 'line-push',
+              message: processedMessage,
+              userId,
+              timestamp: new Date().toISOString()
+            }
+          };
+        } catch (error) {
+          console.log(`❌ LINE推送API錯誤:`, {
+            status: error.response?.status,
+            data: error.response?.data,
+            accessToken: processedAccessToken ? `${processedAccessToken.substring(0, 10)}...` : 'undefined',
+            userId
+          });
+          return { success: false, error: `LINE推送失敗: ${error.response?.status} ${error.message}` };
+        }
+      }
+      
       try {
         const response = await axios.post(
           'https://api.line.me/v2/bot/message/reply',
@@ -362,6 +527,12 @@ async function executeNode(node, context) {
             }
           }
         );
+        
+        // 標記 replyToken 為已使用
+        if (!context._usedReplyTokens) {
+          context._usedReplyTokens = new Set();
+        }
+        context._usedReplyTokens.add(processedReplyToken);
         
         console.log(`📱 LINE回覆訊息成功: ${processedMessage}`);
         return { 
@@ -670,72 +841,88 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
           let context = { ...eventData };
           context._lastResult = { success: true, data: eventData };
           const results = [];
+          // 初始化 replyToken 追蹤
+          if (!context._usedReplyTokens) {
+            context._usedReplyTokens = new Set();
+          }
           
-          // 先執行 webhook-trigger
-          const triggerNode = workflow.nodes.find(n => n.data.type === 'webhook-trigger');
-          if (triggerNode) {
-            console.log(`🔧 執行節點: ${triggerNode.id} (${triggerNode.data.type})`);
+          // 找到所有 webhook-trigger 節點，每個都是獨立的流程起點
+          const triggerNodes = workflow.nodes.filter(n => n.data.type === 'webhook-trigger');
+          
+          for (const triggerNode of triggerNodes) {
+            console.log(`🔧 執行獨立流程起點: ${triggerNode.id} (${triggerNode.data.type})`);
             const result = await executeNode(triggerNode, context);
             results.push({ nodeId: triggerNode.id, result });
             context[triggerNode.id] = result.data;
             context._lastResult = result;
-          }
-          
-          // 找到所有條件節點
-          const conditionNodes = workflow.nodes.filter(n => n.data.type === 'condition');
-          let conditionMatched = false;
-          
-          for (const conditionNode of conditionNodes) {
-            console.log(`🔧 執行節點: ${conditionNode.id} (${conditionNode.data.type})`);
-            const result = await executeNode(conditionNode, context);
-            results.push({ nodeId: conditionNode.id, result });
-            context[conditionNode.id] = result.data;
-            context._lastResult = result;
             
-            // 如果條件為 true，執行連接的節點
-            if (result.data) {
-              const connectedEdge = workflow.edges.find(edge => edge.source === conditionNode.id);
-              if (connectedEdge) {
-                const targetNode = workflow.nodes.find(n => n.id === connectedEdge.target);
-                if (targetNode) {
-                  console.log(`✅ 條件為 true，執行連接的節點: ${targetNode.id}`);
-                  const targetResult = await executeNode(targetNode, context);
-                  results.push({ nodeId: targetNode.id, result: targetResult });
-                  
-                  if (targetResult.success) {
-                    context[targetNode.id] = targetResult.data;
-                    context._lastResult = targetResult;
+            // 找到這個 trigger 連接的條件節點
+            const connectedConditionEdges = workflow.edges.filter(edge => 
+              edge.source === triggerNode.id && 
+              workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+            );
+            
+            let conditionMatched = false;
+            
+            // 執行連接到這個 trigger 的條件節點
+            for (const edge of connectedConditionEdges) {
+              const conditionNode = workflow.nodes.find(n => n.id === edge.target);
+              if (conditionNode) {
+                console.log(`🔧 執行條件節點: ${conditionNode.id} (${conditionNode.data.type})`);
+                const conditionResult = await executeNode(conditionNode, context);
+                results.push({ nodeId: conditionNode.id, result: conditionResult });
+                context[conditionNode.id] = conditionResult.data;
+                context._lastResult = conditionResult;
+                
+                // 如果條件為 true，執行所有連接的節點
+                if (conditionResult.data) {
+                  const actionEdges = workflow.edges.filter(e => e.source === conditionNode.id);
+                  for (const actionEdge of actionEdges) {
+                    const actionNode = workflow.nodes.find(n => n.id === actionEdge.target);
+                    if (actionNode) {
+                      console.log(`✅ 條件為 true，執行連接的節點: ${actionNode.id}`);
+                      const actionResult = await executeNode(actionNode, context);
+                      results.push({ nodeId: actionNode.id, result: actionResult });
+                      
+                      if (actionResult.success) {
+                        context[actionNode.id] = actionResult.data;
+                        context._lastResult = actionResult;
+                      }
+                    }
                   }
                   
-                  conditionMatched = true;
+                  if (actionEdges.length > 0) {
+                    conditionMatched = true;
+                    break; // 找到匹配的條件後結束這個流程
+                  }
+                }
+              }
+            }
+            
+            // 如果沒有條件匹配，執行直接連接到 trigger 的預設節點
+            if (!conditionMatched) {
+              const defaultEdges = workflow.edges.filter(edge => 
+                edge.source === triggerNode.id && 
+                !workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+              );
+              
+              for (const edge of defaultEdges) {
+                const defaultNode = workflow.nodes.find(n => n.id === edge.target);
+                if (defaultNode) {
+                  console.log(`💬 執行預設節點: ${defaultNode.id}`);
+                  const defaultResult = await executeNode(defaultNode, context);
+                  results.push({ nodeId: defaultNode.id, result: defaultResult });
+                  
+                  if (defaultResult.success) {
+                    context[defaultNode.id] = defaultResult.data;
+                    context._lastResult = defaultResult;
+                  }
                   break;
                 }
               }
             }
-          }
-          
-          // 如果所有條件都為 false，執行預設回覆
-          if (!conditionMatched && triggerNode) {
-            // 找到直接連接到 webhook-trigger 的非條件節點
-            const defaultEdges = workflow.edges.filter(edge => 
-              edge.source === triggerNode.id && 
-              !workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
-            );
             
-            for (const edge of defaultEdges) {
-              const defaultNode = workflow.nodes.find(n => n.id === edge.target);
-              if (defaultNode) {
-                console.log(`💬 所有條件都不符合，執行預設節點: ${defaultNode.id}`);
-                const defaultResult = await executeNode(defaultNode, context);
-                results.push({ nodeId: defaultNode.id, result: defaultResult });
-                
-                if (defaultResult.success) {
-                  context[defaultNode.id] = defaultResult.data;
-                  context._lastResult = defaultResult;
-                }
-                break;
-              }
-            }
+            // 繼續檢查下一個 trigger（每個 trigger 都是獨立的流程）
           }
           
           console.log('🚀 LINE Webhook觸發工作流程執行完成', results);

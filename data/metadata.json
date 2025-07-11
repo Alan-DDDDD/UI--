@@ -4,7 +4,15 @@
     "name": "alan_line_msg",
     "description": "",
     "createdAt": "2025-07-11T01:51:03.388Z",
-    "updatedAt": "2025-07-11T02:10:51.001Z",
+    "updatedAt": "2025-07-11T07:32:13.482Z",
+    "nodeCount": 12
+  },
+  "5e74ad99-16cb-4fa5-8f95-6c53325a9b62": {
+    "id": "5e74ad99-16cb-4fa5-8f95-6c53325a9b62",
+    "name": "LINE多流程",
+    "description": "",
+    "createdAt": "2025-07-11T06:25:31.080Z",
+    "updatedAt": "2025-07-11T06:29:07.986Z",
     "nodeCount": 6
   }
 }
