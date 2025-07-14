@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import ReactFlow, { 
   addEdge, 
   useNodesState, 
@@ -43,7 +43,16 @@ function FlowWrapper() {
   const [currentWorkflowName, setCurrentWorkflowName] = useState('新流程');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [sidebarMode, setSidebarMode] = useState('full'); // 'full', 'compact', 'hidden'
+  const [selectedNodes, setSelectedNodes] = useState([]);
+  const [showGroupDialog, setShowGroupDialog] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [nodeGroups, setNodeGroups] = useState({}); // groupId -> [nodeIds]
   const { project } = useReactFlow();
+
+  const handleNodesChange = useCallback((changes) => {
+    onNodesChange(changes);
+    setHasUnsavedChanges(true);
+  }, [onNodesChange]);
 
   const onConnect = useCallback((params) => {
     setEdges((eds) => addEdge({...params, ...defaultEdgeOptions, data: { active: true }}, eds));
@@ -244,8 +253,84 @@ function FlowWrapper() {
   };
 
   const onNodeClick = useCallback((event, node) => {
-    setSelectedNode(node);
+    if (event.ctrlKey || event.metaKey) {
+      setSelectedNodes(prev => 
+        prev.includes(node.id) 
+          ? prev.filter(id => id !== node.id)
+          : [...prev, node.id]
+      );
+    } else {
+      setSelectedNode(node);
+      setSelectedNodes([]);
+    }
   }, []);
+
+  const createGroup = () => {
+    if (selectedNodes.length < 2) {
+      alert('請選擇至少2個節點進行分組');
+      return;
+    }
+    setShowGroupDialog(true);
+  };
+
+  const handleCreateGroup = () => {
+    if (!groupName.trim()) return;
+    
+    const selectedNodeObjects = nodes.filter(node => selectedNodes.includes(node.id));
+    const minX = Math.min(...selectedNodeObjects.map(n => n.position.x));
+    const minY = Math.min(...selectedNodeObjects.map(n => n.position.y));
+    const maxX = Math.max(...selectedNodeObjects.map(n => {
+      const width = n.style?.width || (n.type === 'group' ? 200 : 150);
+      return n.position.x + width;
+    }));
+    const maxY = Math.max(...selectedNodeObjects.map(n => {
+      const height = n.style?.height || (n.type === 'group' ? 100 : 50);
+      return n.position.y + height;
+    }));
+    
+    const groupId = `group-${Date.now()}`;
+    const groupNode = {
+      id: groupId,
+      type: 'group',
+      position: { x: minX - 20, y: minY - 40 },
+      data: { label: groupName },
+      style: {
+        width: maxX - minX + 40,
+        height: maxY - minY + 60,
+        backgroundColor: 'rgba(64, 64, 64, 0.1)',
+        border: '2px solid #666',
+        borderRadius: '8px'
+      },
+      draggable: true,
+      selectable: true,
+      className: 'node-group',
+      'data-level': nodes.filter(n => n.type === 'group').length
+    };
+    
+    // 先添加群組節點，再設定子節點的parentNode
+    setNodes(nds => [...nds, groupNode]);
+    
+    setTimeout(() => {
+      setNodes(nds => nds.map(n => {
+        if (selectedNodes.includes(n.id)) {
+          return {
+            ...n,
+            parentNode: groupId,
+            position: {
+              x: n.position.x - (minX - 20),
+              y: n.position.y - (minY - 40)
+            }
+          };
+        }
+        return n;
+      }));
+    }, 0);
+    setNodeGroups(prev => ({ ...prev, [groupId]: selectedNodes }));
+    setSelectedNodes([]);
+    setShowGroupDialog(false);
+    setGroupName('');
+    setHasUnsavedChanges(true);
+  };
 
   const updateNode = (nodeId, newData) => {
     setNodes((nds) => 
@@ -288,7 +373,25 @@ function FlowWrapper() {
   };
 
   const deleteNode = (nodeId) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    const nodeToDelete = nodes.find(n => n.id === nodeId);
+    
+    if (nodeToDelete && nodeToDelete.type === 'group') {
+      // 刪除群組時，先移除子節點的parentNode關係
+      setNodes((nds) => nds.map(n => 
+        n.parentNode === nodeId 
+          ? { ...n, parentNode: undefined }
+          : n
+      ).filter((node) => node.id !== nodeId));
+      // 清理nodeGroups
+      setNodeGroups(prev => {
+        const newGroups = { ...prev };
+        delete newGroups[nodeId];
+        return newGroups;
+      });
+    } else {
+      setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    }
+    
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
     setHasUnsavedChanges(true);
   };
@@ -301,11 +404,12 @@ function FlowWrapper() {
       // 為現有節點添加className
       const nodesWithType = (workflow.nodes || []).map(node => ({
         ...node,
-        className: `node-${node.data?.type || 'default'}`
+        className: node.type === 'group' ? 'node-group' : `node-${node.data?.type || 'default'}`
       }));
       
       setNodes(nodesWithType);
       setEdges(workflow.edges || []);
+      setNodeGroups(workflow.nodeGroups || {});
       setWorkflowId(selectedWorkflowId);
       setCurrentWorkflowName(workflow.name || '流程');
       setHasUnsavedChanges(false);
@@ -317,6 +421,7 @@ function FlowWrapper() {
   const handleNewWorkflow = () => {
     setNodes([]);
     setEdges([]);
+    setNodeGroups({});
     setWorkflowId(null);
     setCurrentWorkflowName('新流程');
     setHasUnsavedChanges(false);
@@ -352,6 +457,7 @@ function FlowWrapper() {
               workflowName={currentWorkflowName}
               hasUnsavedChanges={hasUnsavedChanges}
               setHasUnsavedChanges={setHasUnsavedChanges}
+              nodeGroups={nodeGroups}
             />
           )}
         </div>
@@ -362,10 +468,20 @@ function FlowWrapper() {
             ⚠️ 有未儲存的變更，請先儲存流程
           </div>
         )}
+        {/* 群組功能暫時取消
+        {selectedNodes.length > 1 && (
+          <div className="group-controls">
+            <button onClick={createGroup} className="group-btn">
+              📦 建立群組 ({selectedNodes.length})
+            </button>
+          </div>
+        )}
+        */}
+        
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
@@ -373,6 +489,7 @@ function FlowWrapper() {
           onDrop={onDrop}
           onDragOver={onDragOver}
           defaultEdgeOptions={defaultEdgeOptions}
+          multiSelectionKeyCode="Control"
         >
           <Controls />
           <Background 
@@ -390,6 +507,24 @@ function FlowWrapper() {
           onDeleteNode={deleteNode}
           onClose={() => setSelectedNode(null)}
         />
+        
+        {showGroupDialog && (
+          <div className="dialog-overlay">
+            <div className="dialog">
+              <h4>建立節點群組</h4>
+              <input 
+                placeholder="群組名稱"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                autoFocus
+              />
+              <div className="dialog-buttons">
+                <button onClick={handleCreateGroup}>建立</button>
+                <button onClick={() => setShowGroupDialog(false)}>取消</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -76,8 +76,8 @@
         "id": "line-reply-1752198786751",
         "type": "default",
         "position": {
-          "x": 1545.5219695866854,
-          "y": 874.4098430143189
+          "x": 1503.4385967314963,
+          "y": 866.593168443281
         },
         "data": {
           "label": "LINE回覆: 你好，我收到你的訊息是:\n\"{...",
@@ -103,10 +103,10 @@
         },
         "width": 150,
         "height": 58,
-        "selected": true,
+        "selected": false,
         "positionAbsolute": {
-          "x": 1545.5219695866854,
-          "y": 874.4098430143189
+          "x": 1503.4385967314963,
+          "y": 866.593168443281
         },
         "dragging": false,
         "className": "node-line-reply"
@@ -168,8 +168,8 @@
         "id": "webhook-trigger-1752217035067",
         "type": "default",
         "position": {
-          "x": 906,
-          "y": 526.4000000000001
+          "x": 789.5050977803594,
+          "y": 548.0105456475644
         },
         "data": {
           "label": "LINE接收訊息",
@@ -181,8 +181,8 @@
         "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": 906,
-          "y": 526.4000000000001
+          "x": 789.5050977803594,
+          "y": 548.0105456475644
         },
         "dragging": false,
         "className": "node-webhook-trigger"
@@ -191,8 +191,8 @@
         "id": "condition-1752217051986",
         "type": "default",
         "position": {
-          "x": 904,
-          "y": 646
+          "x": 783.5050977803594,
+          "y": 672.6105456475643
         },
         "data": {
           "label": "條件: {message} contains 和潤",
@@ -205,8 +205,8 @@
         "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": 904,
-          "y": 646
+          "x": 783.5050977803594,
+          "y": 672.6105456475643
         },
         "dragging": false,
         "className": "node-condition"
@@ -215,8 +215,8 @@
         "id": "line-carousel-1752217063226",
         "type": "default",
         "position": {
-          "x": 1010.6344462458976,
-          "y": 865.4439367138168
+          "x": 892.139544026257,
+          "y": 891.0544823613811
         },
         "data": {
           "label": "LINE多頁",
@@ -279,8 +279,8 @@
         "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": 1010.6344462458976,
-          "y": 865.4439367138168
+          "x": 892.139544026257,
+          "y": 891.0544823613811
         },
         "dragging": false,
         "className": "node-line-carousel"
@@ -289,8 +289,8 @@
         "id": "line-reply-1752217084530",
         "type": "default",
         "position": {
-          "x": 805,
-          "y": 867
+          "x": 703.5050977803594,
+          "y": 878.6105456475643
         },
         "data": {
           "label": "LINE回覆: 你好，我們是和潤企業股份有限公...",
@@ -318,8 +318,8 @@
         "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": 805,
-          "y": 867
+          "x": 703.5050977803594,
+          "y": 878.6105456475643
         },
         "dragging": false,
         "className": "node-line-reply"
@@ -328,8 +328,8 @@
         "id": "webhook-trigger-1752217118850",
         "type": "default",
         "position": {
-          "x": 583,
-          "y": 525
+          "x": 413.66539307480707,
+          "y": 560.2825411250741
         },
         "data": {
           "label": "LINE接收訊息",
@@ -341,8 +341,8 @@
         "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": 583,
-          "y": 525
+          "x": 413.66539307480707,
+          "y": 560.2825411250741
         },
         "dragging": false,
         "className": "node-webhook-trigger"
@@ -351,8 +351,8 @@
         "id": "condition-1752217130538",
         "type": "default",
         "position": {
-          "x": 583,
-          "y": 655
+          "x": 414.66539307480707,
+          "y": 709.2825411250741
         },
         "data": {
           "label": "條件: {message} contains 貸款",
@@ -365,8 +365,8 @@
         "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": 583,
-          "y": 655
+          "x": 414.66539307480707,
+          "y": 709.2825411250741
         },
         "dragging": false,
         "className": "node-condition"
@@ -375,8 +375,8 @@
         "id": "line-reply-1752217143130",
         "type": "default",
         "position": {
-          "x": 500,
-          "y": 823
+          "x": 413.66539307480707,
+          "y": 867.2825411250741
         },
         "data": {
           "label": "LINE回覆: 你好，我收到妳貸款的需求，請問...",
@@ -404,8 +404,8 @@
         "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": 500,
-          "y": 823
+          "x": 413.66539307480707,
+          "y": 867.2825411250741
         },
         "dragging": false,
         "className": "node-line-reply"
@@ -463,14 +463,14 @@
         "targetHandle": null,
         "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530",
         "data": {
-          "active": false
+          "active": true
         },
         "style": {
-          "stroke": "#FF9800",
-          "strokeWidth": 3,
-          "strokeDasharray": "5,5"
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
         },
-        "animated": false
+        "animated": true,
+        "selected": false
       },
       {
         "source": "webhook-trigger-1752217118850",
@@ -488,21 +488,48 @@
       },
       {
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#FFD700",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
         },
         "type": "smoothstep",
-        "animated": true,
+        "animated": false,
         "source": "condition-1752217051986",
         "sourceHandle": null,
         "target": "line-carousel-1752217063226",
         "targetHandle": null,
         "data": {
-          "active": true
+          "active": false
         },
-        "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226"
+        "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226",
+        "selected": false
       }
-    ]
+    ],
+    "nodeGroups": {
+      "group-1752476833990": [
+        "webhook-trigger-1752217118850",
+        "condition-1752217130538",
+        "line-reply-1752217143130"
+      ],
+      "group-1752476873672": [
+        "webhook-trigger-1752217035067",
+        "condition-1752217051986",
+        "line-reply-1752217084530",
+        "line-carousel-1752217063226"
+      ],
+      "group-1752477015583": [
+        "group-1752476833990",
+        "group-1752476873672"
+      ],
+      "group-1752477222399": [
+        "group-1752476833990",
+        "group-1752476873672"
+      ],
+      "group-1752477862055": [
+        "group-1752476833990",
+        "group-1752476873672"
+      ]
+    }
   },
   "5e74ad99-16cb-4fa5-8f95-6c53325a9b62": {
     "nodes": [

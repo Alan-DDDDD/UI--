@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges }) {
+function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups }) {
   const [inputData, setInputData] = useState('{}');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,8 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
         // 更新現有流程
         await axios.put(`http://localhost:3001/api/workflows/${workflowId}`, {
           nodes,
-          edges
+          edges,
+          nodeGroups
         });
         console.log('💾 流程已更新，ID:', workflowId);
         setHasUnsavedChanges(false);
@@ -22,7 +23,8 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
           name: '新流程',
           description: '',
           nodes,
-          edges
+          edges,
+          nodeGroups
         });
         setWorkflowId(response.data.workflowId);
         console.log('💾 流程已儲存，ID:', response.data.workflowId);

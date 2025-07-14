@@ -80,6 +80,32 @@ label {
   gap: 4px;
 }
 
+.node-group {
+  margin-bottom: 15px;
+}
+
+.node-group:last-child {
+  margin-bottom: 0;
+}
+
+.group-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #b0b0b0;
+  margin-bottom: 8px;
+  padding-left: 4px;
+  border-bottom: 1px solid #404040;
+  padding-bottom: 4px;
+}
+
+.node-library.compact .node-group {
+  margin-bottom: 8px;
+}
+
+.node-library.compact .group-title {
+  display: none;
+}
+
 .draggable-node.compact {
   padding: 8px;
   justify-content: center;
@@ -851,6 +877,33 @@ label {
   background-color: rgba(220, 53, 69, 0.2);
 }
 
+/* 群組控制按鈕 */
+.group-controls {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 100;
+}
+
+.group-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  transition: all 0.2s;
+}
+
+.group-btn:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
 /* React Flow 深色主題樣式 */
 .react-flow__node {
   background: #404040 !important;
@@ -858,6 +911,18 @@ label {
   color: #e0e0e0 !important;
   border-radius: 8px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 群組節點樣式 */
+.react-flow__node[data-type="group"] {
+  background: rgba(64, 64, 64, 0.1) !important;
+  border: 2px dashed #666 !important;
+  z-index: -1 !important;
+}
+
+.react-flow__node.selected {
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3) !important;
 }
 
 /* HTTP請求節點 - 藍色 */
@@ -1070,4 +1135,31 @@ label {
   0% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.8; transform: scale(1.02); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+.react-flow__node.node-group {
+  background: rgba(64, 64, 64, 0.1) !important;
+  border: 2px solid #666 !important;
+}
+
+.react-flow__node.node-group[data-level="0"] {
+  z-index: -1 !important;
+}
+
+.react-flow__node.node-group[data-level="1"] {
+  z-index: 0 !important;
+}
+
+.react-flow__node.node-group > div {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  padding: 8px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  color: #e0e0e0 !important;
+  background: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
 }

@@ -2,56 +2,22 @@ import React from 'react';
 
 function NodePanel({ onAddNode, compact = false }) {
 
-  const nodeTypes = [
-    {
-      type: 'http-request',
-      icon: '🌐',
-      label: 'API呼叫',
-      description: '呼叫HTTP API'
-    },
-    {
-      type: 'condition',
-      icon: '❓',
-      label: '條件判斷',
-      description: '根據條件分支'
-    },
-    {
-      type: 'data-map',
-      icon: '🔄',
-      label: '資料映射',
-      description: '轉換資料格式'
-    },
-    {
-      type: 'line-push',
-      icon: '📱',
-      label: 'LINE推送',
-      description: '發送LINE訊息'
-    },
-    {
-      type: 'line-reply',
-      icon: '💬',
-      label: 'LINE回覆',
-      description: '回覆LINE訊息'
-    },
-    {
-      type: 'line-carousel',
-      icon: '🎠',
-      label: 'LINE多頁',
-      description: '多頁訊息卡片'
-    },
-    {
-      type: 'webhook-trigger',
-      icon: '🔗',
-      label: 'Webhook觸發',
-      description: '接收外部觸發'
-    },
-    {
-      type: 'notification',
-      icon: '📢',
-      label: '顯示訊息',
-      description: '顯示通知訊息'
-    }
-  ];
+  const nodeGroups = {
+    '基礎': [
+      { type: 'http-request', icon: '🌐', label: 'API呼叫', description: '呼叫HTTP API' },
+      { type: 'condition', icon: '❓', label: '條件判斷', description: '根據條件分支' },
+      { type: 'data-map', icon: '🔄', label: '資料映射', description: '轉換資料格式' },
+      { type: 'notification', icon: '📢', label: '顯示訊息', description: '顯示通知訊息' }
+    ],
+    'LINE': [
+      { type: 'line-push', icon: '📱', label: 'LINE推送', description: '發送LINE訊息' },
+      { type: 'line-reply', icon: '💬', label: 'LINE回覆', description: '回覆LINE訊息' },
+      { type: 'line-carousel', icon: '🎠', label: 'LINE多頁', description: '多頁訊息卡片' }
+    ],
+    '觸發器': [
+      { type: 'webhook-trigger', icon: '🔗', label: 'Webhook觸發', description: '接收外部觸發' }
+    ]
+  };
 
   const handleDragStart = (e, nodeType) => {
     e.dataTransfer.setData('application/reactflow', nodeType.type);
@@ -120,22 +86,27 @@ function NodePanel({ onAddNode, compact = false }) {
       )}
       
       <div className={`node-library ${compact ? 'compact' : ''}`}>
-        {nodeTypes.map((nodeType) => (
-          <div
-            key={nodeType.type}
-            className={`draggable-node ${compact ? 'compact' : ''}`}
-            draggable
-            onDragStart={(e) => handleDragStart(e, nodeType)}
-            onClick={() => addNodeDirectly(nodeType.type)}
-            title={compact ? nodeType.label : ''}
-          >
-            <div className="node-icon">{nodeType.icon}</div>
-            {!compact && (
-              <div className="node-info">
-                <div className="node-title">{nodeType.label}</div>
-                <div className="node-desc">{nodeType.description}</div>
+        {Object.entries(nodeGroups).map(([groupName, nodes]) => (
+          <div key={groupName} className="node-group">
+            {!compact && <div className="group-title">{groupName}</div>}
+            {nodes.map((nodeType) => (
+              <div
+                key={nodeType.type}
+                className={`draggable-node ${compact ? 'compact' : ''}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, nodeType)}
+                onClick={() => addNodeDirectly(nodeType.type)}
+                title={compact ? nodeType.label : ''}
+              >
+                <div className="node-icon">{nodeType.icon}</div>
+                {!compact && (
+                  <div className="node-info">
+                    <div className="node-title">{nodeType.label}</div>
+                    <div className="node-desc">{nodeType.description}</div>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
         ))}
       </div>
