@@ -236,6 +236,27 @@
                           "type": "message",
                           "label": "選擇1",
                           "text": "選擇1"
+                        },
+                        {
+                          "type": "message",
+                          "label": "貸款",
+                          "text": "貸款"
+                        },
+                        {
+                          "type": "uri",
+                          "label": "Google",
+                          "uri": "https://google.com.tw"
+                        }
+                      ]
+                    },
+                    {
+                      "title": "公司地址",
+                      "text": "連結到公司地址",
+                      "actions": [
+                        {
+                          "type": "uri",
+                          "label": "導航",
+                          "uri": "https://reurl.cc/MzdE8m"
                         }
                       ]
                     }
@@ -244,11 +265,12 @@
               }
             ]
           },
-          "lineAccount": "alan_line_msg_access_tkn"
+          "lineAccount": "alan_line_msg_access_tkn",
+          "simpleMode": false
         },
         "width": 150,
         "height": 39,
-        "selected": false,
+        "selected": true,
         "positionAbsolute": {
           "x": -333.0149589580269,
           "y": 297.7679584204881

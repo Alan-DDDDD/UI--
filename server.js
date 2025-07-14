@@ -335,6 +335,52 @@ async function executeNode(node, context) {
         return { success: false, error: 'LINE Carousel失敗: 缺少或無效的 template 資料' };
       }
       
+      // 修復 carousel template 格式
+      const fixCarouselTemplate = (template) => {
+        if (template.columns && Array.isArray(template.columns)) {
+          template.columns.forEach(column => {
+            // 確保每個 column 都有必要的欄位
+            if (!column.title) column.title = '標題';
+            if (!column.text) column.text = '內容';
+            
+            if (column.actions && Array.isArray(column.actions)) {
+              column.actions.forEach(action => {
+                // URI action 不應該有 text 欄位
+                if (action.type === 'uri' && action.text !== undefined) {
+                  delete action.text;
+                }
+                // 確保 label 存在
+                if (!action.label) {
+                  action.label = action.type === 'uri' ? '連結' : '選項';
+                }
+              });
+            } else {
+              // 如果沒有 actions，添加一個預設的
+              column.actions = [{
+                type: 'message',
+                label: '確定',
+                text: '確定'
+              }];
+            }
+          });
+          
+          // 確保所有 columns 的 actions 數量一致
+          let maxActions = Math.max(...template.columns.map(col => col.actions.length));
+          template.columns.forEach(column => {
+            while (column.actions.length < maxActions) {
+              column.actions.push({
+                type: 'message',
+                label: '更多',
+                text: '更多'
+              });
+            }
+          });
+        }
+        return template;
+      };
+      
+      const fixedCarouselData = fixCarouselTemplate({ ...carouselData });
+      
       // 處理 replyToken 替換
       let carouselProcessedReplyToken = '';
       if (carouselReplyToken) {
@@ -344,7 +390,10 @@ async function executeNode(node, context) {
       }
       
       // 檢查 replyToken 是否已被使用
-      const isReplyTokenUsed = carouselProcessedReplyToken && context._usedReplyTokens && context._usedReplyTokens.has(carouselProcessedReplyToken);
+      if (!context._usedReplyTokens) {
+        context._usedReplyTokens = {};
+      }
+      const isReplyTokenUsed = carouselProcessedReplyToken && context._usedReplyTokens[carouselProcessedReplyToken];
       
       // 決定使用 reply 還是 push
       const shouldUseReply = !!carouselReplyToken && !isReplyTokenUsed;
@@ -362,36 +411,58 @@ async function executeNode(node, context) {
           replyToken: carouselProcessedReplyToken,
           messages: [{
             type: 'template',
-            altText: carouselData.altText || '多頁訊息',
-            template: carouselData
+            altText: fixedCarouselData.altText || '多頁訊息',
+            template: fixedCarouselData
           }]
         };
       } else {
         // 使用 Push 模式
-        let userId = carouselUserId;
-        if (!userId) {
-          // 如果沒有設定 userId，從 context 取得
-          userId = context.userId || context._lastResult?.data?.userId;
-        }
+        let userId = carouselUserId || context.userId;
         if (!userId) {
           return { success: false, error: 'LINE Carousel失敗: 無法取得用戶ID' };
         }
         
-        let processedUserId = userId.replace(/\{([^}]+)\}/g, (match, key) => {
+        let processedUserId = userId.replace ? userId.replace(/\{([^}]+)\}/g, (match, key) => {
           return context[key] || context._lastResult?.data?.[key] || match;
-        });
+        }) : userId;
         
         requestBody = {
           to: processedUserId,
           messages: [{
             type: 'template',
-            altText: carouselData.altText || '多頁訊息',
-            template: carouselData
+            altText: fixedCarouselData.altText || '多頁訊息',
+            template: fixedCarouselData
           }]
         };
       }
       
       console.log(`📱 準備發送 LINE Carousel:`, JSON.stringify(requestBody, null, 2));
+      
+      // 驗證 carousel 格式
+      const validateCarousel = (template) => {
+        if (!template.columns || !Array.isArray(template.columns)) {
+          return '缺少 columns 陣列';
+        }
+        if (template.columns.length === 0) {
+          return 'columns 陣列不能為空';
+        }
+        for (let i = 0; i < template.columns.length; i++) {
+          const col = template.columns[i];
+          if (!col.title || !col.text) {
+            return `第 ${i+1} 個 column 缺少 title 或 text`;
+          }
+          if (!col.actions || !Array.isArray(col.actions) || col.actions.length === 0) {
+            return `第 ${i+1} 個 column 缺少 actions`;
+          }
+        }
+        return null;
+      };
+      
+      const validationError = validateCarousel(requestBody.messages[0].template);
+      if (validationError) {
+        console.log(`❌ Carousel 格式驗證失敗: ${validationError}`);
+        return { success: false, error: `LINE Carousel格式錯誤: ${validationError}` };
+      }
       
       try {
         const response = await axios.post(apiUrl, requestBody, {
@@ -403,10 +474,7 @@ async function executeNode(node, context) {
         
         // 標記 replyToken 為已使用（如果使用了 reply 模式）
         if (shouldUseReply && carouselProcessedReplyToken) {
-          if (!context._usedReplyTokens) {
-            context._usedReplyTokens = new Set();
-          }
-          context._usedReplyTokens.add(carouselProcessedReplyToken);
+          context._usedReplyTokens[carouselProcessedReplyToken] = true;
         }
         
         console.log(`📱 LINE Carousel訊息成功（${shouldUseReply ? 'Reply' : 'Push'} 模式）`);
@@ -422,6 +490,7 @@ async function executeNode(node, context) {
         console.log(`❌ LINE Carousel API錯誤:`, {
           status: error.response?.status,
           data: error.response?.data,
+          details: error.response?.data?.details,
           accessToken: processedCarouselToken ? `${processedCarouselToken.substring(0, 10)}...` : 'undefined',
           requestBody: JSON.stringify(requestBody, null, 2)
         });
@@ -461,12 +530,15 @@ async function executeNode(node, context) {
       }
       
       // 檢查 replyToken 是否已被使用
-      const isReplyTokenUsedInReply = context._usedReplyTokens && context._usedReplyTokens.has(processedReplyToken);
+      if (!context._usedReplyTokens) {
+        context._usedReplyTokens = {};
+      }
+      const isReplyTokenUsedInReply = context._usedReplyTokens[processedReplyToken];
       
       if (isReplyTokenUsedInReply) {
         console.log(`⚠️ ReplyToken 已被使用，改為 Push 模式: ${processedReplyToken}`);
         // 改為 Push 模式
-        const userId = context.userId || context._lastResult?.data?.userId;
+        const userId = context.userId;
         if (!userId) {
           return { success: false, error: 'LINE推送失敗: 無法取得用戶ID' };
         }
@@ -489,11 +561,12 @@ async function executeNode(node, context) {
             }
           );
           
-          console.log(`📱 LINE推送訊息成功: ${processedMessage}`);
+          console.log(`📱 LINE推送訊息成功（Push模式）: ${processedMessage}`);
           return { 
             success: true, 
             data: { 
               type: 'line-push',
+              mode: 'push',
               message: processedMessage,
               userId,
               timestamp: new Date().toISOString()
@@ -529,10 +602,7 @@ async function executeNode(node, context) {
         );
         
         // 標記 replyToken 為已使用
-        if (!context._usedReplyTokens) {
-          context._usedReplyTokens = new Set();
-        }
-        context._usedReplyTokens.add(processedReplyToken);
+        context._usedReplyTokens[processedReplyToken] = true;
         
         console.log(`📱 LINE回覆訊息成功: ${processedMessage}`);
         return { 
@@ -843,7 +913,7 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
           const results = [];
           // 初始化 replyToken 追蹤
           if (!context._usedReplyTokens) {
-            context._usedReplyTokens = new Set();
+            context._usedReplyTokens = {};
           }
           
           // 找到所有 webhook-trigger 節點，每個都是獨立的流程起點
@@ -863,6 +933,7 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
             );
             
             let conditionMatched = false;
+            let replyTokenUsed = false;
             
             // 執行連接到這個 trigger 的條件節點
             for (const edge of connectedConditionEdges) {
@@ -881,19 +952,27 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                     const actionNode = workflow.nodes.find(n => n.id === actionEdge.target);
                     if (actionNode) {
                       console.log(`✅ 條件為 true，執行連接的節點: ${actionNode.id}`);
+                      
+
+                      
                       const actionResult = await executeNode(actionNode, context);
                       results.push({ nodeId: actionNode.id, result: actionResult });
                       
                       if (actionResult.success) {
                         context[actionNode.id] = actionResult.data;
                         context._lastResult = actionResult;
+                        
+                        // 如果是 LINE reply 或 carousel 且成功，標記 replyToken 已使用
+                        if ((actionNode.data.type === 'line-reply' || actionNode.data.type === 'line-carousel') && 
+                            actionResult.data && actionResult.data.mode !== 'push') {
+                          replyTokenUsed = true;
+                        }
                       }
                     }
                   }
                   
                   if (actionEdges.length > 0) {
                     conditionMatched = true;
-                    break; // 找到匹配的條件後結束這個流程
                   }
                 }
               }

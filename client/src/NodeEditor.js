@@ -482,90 +482,62 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
               <select 
                 value={config.templateType || 'carousel'}
                 onChange={(e) => {
-                  const templates = {
-                    carousel: {
-                      type: 'carousel',
-                      columns: [{
-                        title: '標题1',
-                        text: '內容1',
-                        actions: [{type: 'message', label: '選擇1', text: '選擇1'}]
-                      }]
-                    },
-                    buttons: {
-                      type: 'buttons',
-                      text: '請選擇一個選項',
-                      actions: [
-                        {type: 'message', label: '選擇1', text: '選擇1'},
-                        {type: 'message', label: '選擇2', text: '選擇2'}
-                      ]
-                    },
-                    confirm: {
-                      type: 'confirm',
-                      text: '確定要執行這個操作嗎？',
-                      actions: [
-                        {type: 'message', label: '是', text: '確定'},
-                        {type: 'message', label: '否', text: '取消'}
-                      ]
-                    },
-                    imagemap: {
-                      type: 'imagemap',
-                      baseUrl: 'https://developers.line.biz/assets/img/messaging-api/imagemap/sample',
-                      baseSize: {width: 1040, height: 1040},
-                      actions: [
-                        {type: 'message', area: {x: 0, y: 0, width: 520, height: 520}, text: '左上'},
-                        {type: 'message', area: {x: 520, y: 0, width: 520, height: 520}, text: '右上'},
-                        {type: 'message', area: {x: 0, y: 520, width: 520, height: 520}, text: '左下'},
-                        {type: 'message', area: {x: 520, y: 520, width: 520, height: 520}, text: '右下'}
-                      ]
-                    }
-                  };
                   setConfig({
                     ...config,
                     templateType: e.target.value,
-                    body: {
-                      ...config.body,
-                      messages: [{
-                        type: 'template',
-                        altText: templates[e.target.value].altText || '範本訊息',
-                        template: templates[e.target.value]
-                      }]
-                    }
+                    simpleMode: true // 啟用簡單模式
                   });
                 }}
               >
-                <option value="carousel">🎠 輪播卡片 (Carousel)</option>
-                <option value="buttons">🔘 按鈕範本 (Buttons)</option>
-                <option value="confirm">❓ 確認範本 (Confirm)</option>
-                <option value="imagemap">🗺️ 圖片地圖 (Imagemap)</option>
+                <option value="carousel">🎠 輪播卡片 - 多張卡片橫向滑動</option>
+                <option value="buttons">🔘 按鈕範本 - 一則訊息配多個按鈕</option>
+                <option value="confirm">❓ 確認範本 - 是/否選擇</option>
               </select>
             </div>
-            <textarea 
-              placeholder={getTemplatePlaceholder(config.templateType || 'carousel')}
-              value={typeof config.body?.messages?.[0]?.template === 'object' ? 
-                JSON.stringify(config.body.messages[0].template, null, 2) : ''}
-              onChange={(e) => {
-                try {
-                  const template = JSON.parse(e.target.value);
-                  setConfig({
-                    ...config,
-                    body: {
-                      ...config.body,
-                      messages: [{
-                        type: 'template',
-                        altText: template.altText || '多頁訊息',
-                        template
-                      }]
-                    }
-                  });
-                } catch (err) {
-                  // JSON 無效時不更新
-                }
-              }}
-              rows={10}
-            />
-            <small style={{color: '#666', fontSize: '12px'}}>
-              {getTemplateHint(config.templateType || 'carousel')}
-            </small>
+            
+            {renderSimpleTemplateEditor(config, setConfig)}
+            
+            <div style={{marginTop: '15px', padding: '10px', background: '#f8f9fa', borderRadius: '4px'}}>
+              <label>
+                <input 
+                  type="checkbox" 
+                  checked={!config.simpleMode}
+                  onChange={(e) => setConfig({...config, simpleMode: !e.target.checked})}
+                />
+                進階模式 (JSON 編輯)
+              </label>
+              {!config.simpleMode && (
+                <div style={{marginTop: '10px'}}>
+                  <textarea 
+                    placeholder={getTemplatePlaceholder(config.templateType || 'carousel')}
+                    value={typeof config.body?.messages?.[0]?.template === 'object' ? 
+                      JSON.stringify(config.body.messages[0].template, null, 2) : ''}
+                    onChange={(e) => {
+                      try {
+                        const template = JSON.parse(e.target.value);
+                        setConfig({
+                          ...config,
+                          body: {
+                            ...config.body,
+                            messages: [{
+                              type: 'template',
+                              altText: template.altText || '多頁訊息',
+                              template
+                            }]
+                          }
+                        });
+                      } catch (err) {
+                        // JSON 無效時不更新
+                      }
+                    }}
+                    rows={10}
+                  />
+                  <small style={{color: '#666', fontSize: '12px'}}>
+                    {getTemplateHint(config.templateType || 'carousel')}
+                  </small>
+                </div>
+              )}
+            </div>
           </div>
         );
       
@@ -666,6 +638,349 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
       imagemap: '💡 Imagemap: 在圖片上設定可點擊區域'
     };
     return hints[templateType] || hints.carousel;
+  };
+
+  const renderSimpleTemplateEditor = (config, setConfig) => {
+    const templateType = config.templateType || 'carousel';
+    const template = config.body?.messages?.[0]?.template || {};
+    
+    const updateTemplate = (newTemplate) => {
+      setConfig({
+        ...config,
+        body: {
+          ...config.body,
+          messages: [{
+            type: 'template',
+            altText: newTemplate.altText || '多頁訊息',
+            template: newTemplate
+          }]
+        }
+      });
+    };
+    
+    if (templateType === 'carousel') {
+      const columns = template.columns || [{ title: '', text: '', actions: [{ type: 'message', label: '', text: '' }] }];
+      
+      return (
+        <div style={{ margin: '10px 0' }}>
+          <h5>🎠 輪播卡片設定</h5>
+          {columns.map((column, index) => (
+            <div key={index} style={{ border: '1px solid #ddd', padding: '10px', margin: '5px 0', borderRadius: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong>卡片 {index + 1}</strong>
+                {columns.length > 1 && (
+                  <button 
+                    onClick={() => {
+                      const newColumns = columns.filter((_, i) => i !== index);
+                      updateTemplate({ ...template, columns: newColumns });
+                    }}
+                    style={{ background: '#ff4444', color: 'white', border: 'none', borderRadius: '3px', padding: '2px 6px' }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <input 
+                placeholder="卡片標題"
+                value={column.title || ''}
+                onChange={(e) => {
+                  const newColumns = [...columns];
+                  newColumns[index] = { ...column, title: e.target.value };
+                  updateTemplate({ ...template, columns: newColumns });
+                }}
+                style={{ width: '100%', margin: '5px 0' }}
+              />
+              <textarea 
+                placeholder="卡片內容"
+                value={column.text || ''}
+                onChange={(e) => {
+                  const newColumns = [...columns];
+                  newColumns[index] = { ...column, text: e.target.value };
+                  updateTemplate({ ...template, columns: newColumns });
+                }}
+                rows={2}
+                style={{ width: '100%', margin: '5px 0' }}
+              />
+              <input 
+                placeholder="圖片網址 (可選)"
+                value={column.thumbnailImageUrl || ''}
+                onChange={(e) => {
+                  const newColumns = [...columns];
+                  newColumns[index] = { ...column, thumbnailImageUrl: e.target.value };
+                  updateTemplate({ ...template, columns: newColumns });
+                }}
+                style={{ width: '100%', margin: '5px 0' }}
+              />
+              
+              <div style={{ marginTop: '10px' }}>
+                <strong>按鈕設定：</strong>
+                {(column.actions || []).map((action, actionIndex) => (
+                  <div key={actionIndex} style={{ border: '1px solid #eee', padding: '8px', margin: '5px 0', borderRadius: '4px', background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#666' }}>按鈕 {actionIndex + 1}</span>
+                      {column.actions.length > 1 && (
+                        <button 
+                          onClick={() => {
+                            const newColumns = [...columns];
+                            const newActions = column.actions.filter((_, i) => i !== actionIndex);
+                            newColumns[index] = { ...column, actions: newActions };
+                            updateTemplate({ ...template, columns: newColumns });
+                          }}
+                          style={{ background: '#ff4444', color: 'white', border: 'none', borderRadius: '3px', padding: '2px 6px', fontSize: '12px' }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ marginBottom: '5px' }}>
+                      <label style={{ fontSize: '12px', color: '#666' }}>按鈕文字：</label>
+                      <input 
+                        placeholder="例如：購買、查看詳情"
+                        value={action.label || ''}
+                        onChange={(e) => {
+                          const newColumns = [...columns];
+                          const newActions = [...(column.actions || [])];
+                          newActions[actionIndex] = { ...action, label: e.target.value };
+                          newColumns[index] = { ...column, actions: newActions };
+                          updateTemplate({ ...template, columns: newColumns });
+                        }}
+                        style={{ width: '100%', padding: '4px', border: '1px solid #ddd', borderRadius: '3px' }}
+                      />
+                    </div>
+                    <div style={{ marginBottom: '5px' }}>
+                      <label style={{ fontSize: '12px', color: '#666' }}>按鈕類型：</label>
+                      <select 
+                        value={action.type || 'message'}
+                        onChange={(e) => {
+                          const newColumns = [...columns];
+                          const newActions = [...(column.actions || [])];
+                          newActions[actionIndex] = { ...action, type: e.target.value };
+                          newColumns[index] = { ...column, actions: newActions };
+                          updateTemplate({ ...template, columns: newColumns });
+                        }}
+                        style={{ width: '100%', padding: '4px', border: '1px solid #ddd', borderRadius: '3px' }}
+                      >
+                        <option value="message">💬 傳送訊息</option>
+                        <option value="uri">🔗 開啟網址</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', color: '#666' }}>
+                        {action.type === 'uri' ? '網址連結：' : '回覆訊息：'}
+                      </label>
+                      <input 
+                        placeholder={action.type === 'uri' ? 'https://example.com' : '例如：購買商品1'}
+                        value={action.type === 'uri' ? (action.uri || '') : (action.text || '')}
+                        onChange={(e) => {
+                          const newColumns = [...columns];
+                          const newActions = [...(column.actions || [])];
+                          if (action.type === 'uri') {
+                            newActions[actionIndex] = { ...action, uri: e.target.value };
+                          } else {
+                            newActions[actionIndex] = { ...action, text: e.target.value };
+                          }
+                          newColumns[index] = { ...column, actions: newActions };
+                          updateTemplate({ ...template, columns: newColumns });
+                        }}
+                        style={{ width: '100%', padding: '4px', border: '1px solid #ddd', borderRadius: '3px' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {(column.actions || []).length < 3 && (
+                  <button 
+                    onClick={() => {
+                      const newColumns = [...columns];
+                      const newActions = [...(column.actions || []), { type: 'message', label: '', text: '' }];
+                      newColumns[index] = { ...column, actions: newActions };
+                      updateTemplate({ ...template, columns: newColumns });
+                    }}
+                    style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '3px', padding: '5px 10px', marginTop: '5px' }}
+                  >
+                    + 新增按鈕
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          {columns.length < 10 && (
+            <button 
+              onClick={() => {
+                const newColumns = [...columns, { title: '', text: '', actions: [{ type: 'message', label: '', text: '' }] }];
+                updateTemplate({ ...template, type: 'carousel', columns: newColumns });
+              }}
+              style={{ background: '#2196F3', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 15px', marginTop: '10px' }}
+            >
+              + 新增卡片
+            </button>
+          )}
+        </div>
+      );
+    }
+    
+    if (templateType === 'buttons') {
+      const actions = template.actions || [{ type: 'message', label: '', text: '' }];
+      
+      return (
+        <div style={{ margin: '10px 0' }}>
+          <h5>🔘 按鈕範本設定</h5>
+          <textarea 
+            placeholder="主訊息內容"
+            value={template.text || ''}
+            onChange={(e) => updateTemplate({ ...template, type: 'buttons', text: e.target.value })}
+            rows={3}
+            style={{ width: '100%', margin: '5px 0' }}
+          />
+          <input 
+            placeholder="圖片網址 (可選)"
+            value={template.thumbnailImageUrl || ''}
+            onChange={(e) => updateTemplate({ ...template, thumbnailImageUrl: e.target.value })}
+            style={{ width: '100%', margin: '5px 0' }}
+          />
+          
+          <div style={{ marginTop: '10px' }}>
+            <strong>按鈕設定：</strong>
+            {actions.map((action, index) => (
+              <div key={index} style={{ display: 'flex', gap: '5px', margin: '5px 0' }}>
+                <input 
+                  placeholder="按鈕文字"
+                  value={action.label || ''}
+                  onChange={(e) => {
+                    const newActions = [...actions];
+                    newActions[index] = { ...action, label: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ flex: 1 }}
+                />
+                <select 
+                  value={action.type || 'message'}
+                  onChange={(e) => {
+                    const newActions = [...actions];
+                    newActions[index] = { ...action, type: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                >
+                  <option value="message">傳送訊息</option>
+                  <option value="uri">開啟網址</option>
+                </select>
+                <input 
+                  placeholder={action.type === 'uri' ? '網址' : '回覆訊息'}
+                  value={action.type === 'uri' ? (action.uri || '') : (action.text || '')}
+                  onChange={(e) => {
+                    const newActions = [...actions];
+                    if (action.type === 'uri') {
+                      newActions[index] = { ...action, uri: e.target.value };
+                    } else {
+                      newActions[index] = { ...action, text: e.target.value };
+                    }
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ flex: 1 }}
+                />
+                {actions.length > 1 && (
+                  <button 
+                    onClick={() => {
+                      const newActions = actions.filter((_, i) => i !== index);
+                      updateTemplate({ ...template, actions: newActions });
+                    }}
+                    style={{ background: '#ff4444', color: 'white', border: 'none', borderRadius: '3px', padding: '5px' }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+            {actions.length < 4 && (
+              <button 
+                onClick={() => {
+                  const newActions = [...actions, { type: 'message', label: '', text: '' }];
+                  updateTemplate({ ...template, type: 'buttons', actions: newActions });
+                }}
+                style={{ background: '#4CAF50', color: 'white', border: 'none', borderRadius: '3px', padding: '5px 10px', marginTop: '5px' }}
+              >
+                + 新增按鈕
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    if (templateType === 'confirm') {
+      return (
+        <div style={{ margin: '10px 0' }}>
+          <h5>❓ 確認範本設定</h5>
+          <textarea 
+            placeholder="確認訊息內容"
+            value={template.text || ''}
+            onChange={(e) => updateTemplate({ 
+              type: 'confirm', 
+              text: e.target.value,
+              actions: template.actions || [
+                { type: 'message', label: '是', text: '確定' },
+                { type: 'message', label: '否', text: '取消' }
+              ]
+            })}
+            rows={3}
+            style={{ width: '100%', margin: '5px 0' }}
+          />
+          
+          <div style={{ marginTop: '10px' }}>
+            <strong>按鈕設定：</strong>
+            <div style={{ display: 'flex', gap: '10px', margin: '5px 0' }}>
+              <div style={{ flex: 1 }}>
+                <label>確定按鈕：</label>
+                <input 
+                  placeholder="按鈕文字"
+                  value={template.actions?.[0]?.label || '是'}
+                  onChange={(e) => {
+                    const newActions = [...(template.actions || [])];
+                    newActions[0] = { ...newActions[0], label: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ width: '100%', margin: '2px 0' }}
+                />
+                <input 
+                  placeholder="回覆訊息"
+                  value={template.actions?.[0]?.text || '確定'}
+                  onChange={(e) => {
+                    const newActions = [...(template.actions || [])];
+                    newActions[0] = { ...newActions[0], text: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ width: '100%', margin: '2px 0' }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label>取消按鈕：</label>
+                <input 
+                  placeholder="按鈕文字"
+                  value={template.actions?.[1]?.label || '否'}
+                  onChange={(e) => {
+                    const newActions = [...(template.actions || [])];
+                    newActions[1] = { ...newActions[1], label: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ width: '100%', margin: '2px 0' }}
+                />
+                <input 
+                  placeholder="回覆訊息"
+                  value={template.actions?.[1]?.text || '取消'}
+                  onChange={(e) => {
+                    const newActions = [...(template.actions || [])];
+                    newActions[1] = { ...newActions[1], text: e.target.value };
+                    updateTemplate({ ...template, actions: newActions });
+                  }}
+                  style={{ width: '100%', margin: '2px 0' }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
   };
 
   return (
