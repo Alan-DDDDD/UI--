@@ -159,6 +159,17 @@ function FlowWrapper() {
         y: event.clientY - reactFlowBounds.top,
       });
       
+      // 如果沒有指定位置，使用水平佈局
+      if (!position.x || !position.y) {
+        const baseX = 50;
+        const baseY = 150;
+        const spacingX = 200;
+        const spacingY = 120;
+        const nodesPerRow = 6;
+        position.x = baseX + (nodes.length % nodesPerRow) * spacingX;
+        position.y = baseY + Math.floor(nodes.length / nodesPerRow) * spacingY;
+      }
+      
       const defaultData = {
         'http-request': { label: 'API呼叫', url: '', method: 'GET' },
         'condition': { label: '條件判斷', field: '{message}', operator: 'contains', value: '你好' },
@@ -219,6 +230,8 @@ function FlowWrapper() {
           label: getNodeDisplayLabel(type, defaultData[type])
         },
         className: `node-${type}`,
+        sourcePosition: 'right',
+        targetPosition: 'left'
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -228,13 +241,15 @@ function FlowWrapper() {
   );
 
   const addNode = (type, data) => {
-    // 計算新節點位置，水平排列且在畫面可見區域
+    // 計算新節點位置，水平排列
     const baseX = 50;
     const baseY = 150;
-    const spacing = 250;
+    const spacingX = 200; // 水平間距
+    const spacingY = 120; // 垂直間距
+    const nodesPerRow = 6; // 每行最多6個節點
     const position = {
-      x: baseX + (nodes.length % 4) * spacing, // 每4個節點換行
-      y: baseY + Math.floor(nodes.length / 4) * 150 // 每行間隔150px
+      x: baseX + (nodes.length % nodesPerRow) * spacingX,
+      y: baseY + Math.floor(nodes.length / nodesPerRow) * spacingY
     };
     
     const newNode = {
@@ -247,6 +262,8 @@ function FlowWrapper() {
         ...data
       },
       className: `node-${type}`,
+      sourcePosition: 'right',
+      targetPosition: 'left'
     };
     setNodes((nds) => [...nds, newNode]);
     setHasUnsavedChanges(true);
@@ -401,10 +418,12 @@ function FlowWrapper() {
       const response = await fetch(`http://localhost:3001/api/workflows/${selectedWorkflowId}`);
       const workflow = await response.json();
       
-      // 為現有節點添加className
+      // 為現有節點添加className和連接點位置
       const nodesWithType = (workflow.nodes || []).map(node => ({
         ...node,
-        className: node.type === 'group' ? 'node-group' : `node-${node.data?.type || 'default'}`
+        className: node.type === 'group' ? 'node-group' : `node-${node.data?.type || 'default'}`,
+        sourcePosition: node.type === 'group' ? undefined : 'right',
+        targetPosition: node.type === 'group' ? undefined : 'left'
       }));
       
       setNodes(nodesWithType);
