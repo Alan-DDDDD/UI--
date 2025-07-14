@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function ExecutePanel({ nodes, edges, workflowId, setWorkflowId }) {
+function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges }) {
   const [inputData, setInputData] = useState('{}');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId }) {
           edges
         });
         console.log('💾 流程已更新，ID:', workflowId);
+        setHasUnsavedChanges(false);
       } else {
         // 創建新流程
         const response = await axios.post('http://localhost:3001/api/workflows', {
@@ -25,6 +26,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId }) {
         });
         setWorkflowId(response.data.workflowId);
         console.log('💾 流程已儲存，ID:', response.data.workflowId);
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       alert('儲存失敗: ' + error.message);
@@ -96,7 +98,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId }) {
     <div className="execute-panel">
       <h3>🚀 執行控制</h3>
       
-      <button onClick={saveWorkflow}>💾 儲存流程</button>
+      <button onClick={saveWorkflow} className={hasUnsavedChanges ? 'save-btn-highlight' : ''}>💾 儲存流程</button>
       {workflowId && (
         <div className="workflow-saved">
           ✅ 流程已儲存

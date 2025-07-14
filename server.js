@@ -644,7 +644,19 @@ app.post('/api/execute/:workflowId', async (req, res) => {
   const results = [];
   
   try {
+    // 過濾出啟用的邊
+    const activeEdges = workflow.edges.filter(edge => edge.data?.active !== false);
+    
     for (const node of workflow.nodes) {
+      // 檢查是否有啟用的邊連接到此節點
+      const hasActiveConnection = activeEdges.some(edge => edge.target === node.id) || 
+                                 workflow.nodes.indexOf(node) === 0; // 第一個節點總是執行
+      
+      if (!hasActiveConnection && workflow.nodes.indexOf(node) !== 0) {
+        console.log(`⏸️ 跳過節點 ${node.id}，因為沒有啟用的連接`);
+        continue;
+      }
+      
       const result = await executeNode(node, context);
       results.push({ nodeId: node.id, result });
       
@@ -926,9 +938,10 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
             context[triggerNode.id] = result.data;
             context._lastResult = result;
             
-            // 找到這個 trigger 連接的條件節點
+            // 找到這個 trigger 連接的條件節點（只考慮啟用的邊）
             const connectedConditionEdges = workflow.edges.filter(edge => 
               edge.source === triggerNode.id && 
+              edge.data?.active !== false &&
               workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
             );
             
@@ -945,9 +958,9 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                 context[conditionNode.id] = conditionResult.data;
                 context._lastResult = conditionResult;
                 
-                // 如果條件為 true，執行所有連接的節點
+                // 如果條件為 true，執行所有連接的節點（只考慮啟用的邊）
                 if (conditionResult.data) {
-                  const actionEdges = workflow.edges.filter(e => e.source === conditionNode.id);
+                  const actionEdges = workflow.edges.filter(e => e.source === conditionNode.id && e.data?.active !== false);
                   for (const actionEdge of actionEdges) {
                     const actionNode = workflow.nodes.find(n => n.id === actionEdge.target);
                     if (actionNode) {
@@ -978,10 +991,11 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
               }
             }
             
-            // 如果沒有條件匹配，執行直接連接到 trigger 的預設節點
+            // 如果沒有條件匹配，執行直接連接到 trigger 的預設節點（只考慮啟用的邊）
             if (!conditionMatched) {
               const defaultEdges = workflow.edges.filter(edge => 
                 edge.source === triggerNode.id && 
+                edge.data?.active !== false &&
                 !workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
               );
               

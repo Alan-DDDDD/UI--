@@ -5,8 +5,8 @@
         "id": "webhook-trigger-1752198682775",
         "type": "default",
         "position": {
-          "x": 275.85620868563285,
-          "y": 69.078036260478
+          "x": 1381.38348196985,
+          "y": 526.0597545702747
         },
         "data": {
           "label": "LINE接收訊息",
@@ -15,20 +15,21 @@
           "description": ""
         },
         "width": 150,
-        "height": 39,
+        "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": 275.85620868563285,
-          "y": 69.078036260478
+          "x": 1381.38348196985,
+          "y": 526.0597545702747
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-webhook-trigger"
       },
       {
         "id": "condition-1752198739159",
         "type": "default",
         "position": {
-          "x": 85.61698278824309,
-          "y": 175.88294819949616
+          "x": 1503.3912146248792,
+          "y": 676.4836563983847
         },
         "data": {
           "label": "條件: {message} contains 你好",
@@ -38,20 +39,21 @@
           "value": "你好"
         },
         "width": 150,
-        "height": 56,
+        "height": 58,
         "selected": false,
         "dragging": false,
         "positionAbsolute": {
-          "x": 85.61698278824309,
-          "y": 175.88294819949616
-        }
+          "x": 1503.3912146248792,
+          "y": 676.4836563983847
+        },
+        "className": "node-condition"
       },
       {
         "id": "condition-1752198752087",
         "type": "default",
         "position": {
-          "x": 289.655064348744,
-          "y": 178.2319661109681
+          "x": 1251.9782085311795,
+          "y": 676.4836563983847
         },
         "data": {
           "label": "條件: {message} contains 我好",
@@ -61,20 +63,21 @@
           "value": "我好"
         },
         "width": 150,
-        "height": 56,
+        "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": 289.655064348744,
-          "y": 178.2319661109681
+          "x": 1251.9782085311795,
+          "y": 676.4836563983847
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-condition"
       },
       {
         "id": "line-reply-1752198786751",
         "type": "default",
         "position": {
-          "x": 64.65494586745473,
-          "y": 356.0588633502982
+          "x": 1545.5219695866854,
+          "y": 874.4098430143189
         },
         "data": {
           "label": "LINE回覆: 你好，我收到你的訊息是:\n\"{...",
@@ -99,20 +102,21 @@
           "lineAccount": "alan_line_msg_access_tkn"
         },
         "width": 150,
-        "height": 56,
-        "selected": false,
+        "height": 58,
+        "selected": true,
         "positionAbsolute": {
-          "x": 64.65494586745473,
-          "y": 356.0588633502982
+          "x": 1545.5219695866854,
+          "y": 874.4098430143189
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-line-reply"
       },
       {
         "id": "line-carousel-1752211392228",
         "type": "default",
         "position": {
-          "x": 320.9492824028505,
-          "y": 364.35065631028147
+          "x": 1215.1254852124655,
+          "y": 867.3884016323443
         },
         "data": {
           "label": "LINE多頁",
@@ -151,20 +155,21 @@
           "templateType": "carousel"
         },
         "width": 150,
-        "height": 39,
+        "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": 320.9492824028505,
-          "y": 364.35065631028147
+          "x": 1215.1254852124655,
+          "y": 867.3884016323443
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-line-carousel"
       },
       {
         "id": "webhook-trigger-1752217035067",
         "type": "default",
         "position": {
-          "x": -213.8262194999121,
-          "y": 56.89808687848989
+          "x": 906,
+          "y": 526.4000000000001
         },
         "data": {
           "label": "LINE接收訊息",
@@ -173,20 +178,21 @@
           "description": ""
         },
         "width": 150,
-        "height": 39,
+        "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": -213.8262194999121,
-          "y": 56.89808687848989
+          "x": 906,
+          "y": 526.4000000000001
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-webhook-trigger"
       },
       {
         "id": "condition-1752217051986",
         "type": "default",
         "position": {
-          "x": -244.0217639282112,
-          "y": 151.60248476508374
+          "x": 904,
+          "y": 646
         },
         "data": {
           "label": "條件: {message} contains 和潤",
@@ -196,20 +202,21 @@
           "value": "和潤"
         },
         "width": 150,
-        "height": 56,
+        "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": -244.0217639282112,
-          "y": 151.60248476508374
+          "x": 904,
+          "y": 646
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-condition"
       },
       {
         "id": "line-carousel-1752217063226",
         "type": "default",
         "position": {
-          "x": -333.0149589580269,
-          "y": 297.7679584204881
+          "x": 1010.6344462458976,
+          "y": 865.4439367138168
         },
         "data": {
           "label": "LINE多頁",
@@ -269,20 +276,21 @@
           "simpleMode": false
         },
         "width": 150,
-        "height": 39,
-        "selected": true,
+        "height": 41,
+        "selected": false,
         "positionAbsolute": {
-          "x": -333.0149589580269,
-          "y": 297.7679584204881
+          "x": 1010.6344462458976,
+          "y": 865.4439367138168
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-line-carousel"
       },
       {
         "id": "line-reply-1752217084530",
         "type": "default",
         "position": {
-          "x": -137.95357528179966,
-          "y": 300.2684528227468
+          "x": 805,
+          "y": 867
         },
         "data": {
           "label": "LINE回覆: 你好，我們是和潤企業股份有限公...",
@@ -307,20 +315,21 @@
           "lineAccount": "alan_line_msg_access_tkn"
         },
         "width": 150,
-        "height": 73,
+        "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": -137.95357528179966,
-          "y": 300.2684528227468
+          "x": 805,
+          "y": 867
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-line-reply"
       },
       {
         "id": "webhook-trigger-1752217118850",
         "type": "default",
         "position": {
-          "x": -543.0589555505948,
-          "y": 51.22705633157944
+          "x": 583,
+          "y": 525
         },
         "data": {
           "label": "LINE接收訊息",
@@ -329,20 +338,21 @@
           "description": ""
         },
         "width": 150,
-        "height": 39,
+        "height": 41,
         "selected": false,
         "positionAbsolute": {
-          "x": -543.0589555505948,
-          "y": 51.22705633157944
+          "x": 583,
+          "y": 525
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-webhook-trigger"
       },
       {
         "id": "condition-1752217130538",
         "type": "default",
         "position": {
-          "x": -596.6433218504104,
-          "y": 144.9514223701349
+          "x": 583,
+          "y": 655
         },
         "data": {
           "label": "條件: {message} contains 貸款",
@@ -352,20 +362,21 @@
           "value": "貸款"
         },
         "width": 150,
-        "height": 56,
+        "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": -596.6433218504104,
-          "y": 144.9514223701349
+          "x": 583,
+          "y": 655
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-condition"
       },
       {
         "id": "line-reply-1752217143130",
         "type": "default",
         "position": {
-          "x": -583.6328505822056,
-          "y": 261.5858406410627
+          "x": 500,
+          "y": 823
         },
         "data": {
           "label": "LINE回覆: 你好，我收到妳貸款的需求，請問...",
@@ -390,13 +401,14 @@
           "lineAccount": "alan_line_msg_access_tkn"
         },
         "width": 150,
-        "height": 73,
+        "height": 58,
         "selected": false,
         "positionAbsolute": {
-          "x": -583.6328505822056,
-          "y": 261.5858406410627
+          "x": 500,
+          "y": 823
         },
-        "dragging": false
+        "dragging": false,
+        "className": "node-line-reply"
       }
     ],
     "edges": [
@@ -426,7 +438,16 @@
         "sourceHandle": null,
         "target": "line-carousel-1752211392228",
         "targetHandle": null,
-        "id": "reactflow__edge-condition-1752198752087-line-carousel-1752211392228"
+        "id": "reactflow__edge-condition-1752198752087-line-carousel-1752211392228",
+        "selected": false,
+        "data": {
+          "active": true
+        },
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "animated": true
       },
       {
         "source": "webhook-trigger-1752217035067",
@@ -438,16 +459,18 @@
       {
         "source": "condition-1752217051986",
         "sourceHandle": null,
-        "target": "line-carousel-1752217063226",
-        "targetHandle": null,
-        "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226"
-      },
-      {
-        "source": "condition-1752217051986",
-        "sourceHandle": null,
         "target": "line-reply-1752217084530",
         "targetHandle": null,
-        "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530"
+        "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530",
+        "data": {
+          "active": false
+        },
+        "style": {
+          "stroke": "#FF9800",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
+        },
+        "animated": false
       },
       {
         "source": "webhook-trigger-1752217118850",
@@ -462,6 +485,22 @@
         "target": "line-reply-1752217143130",
         "targetHandle": null,
         "id": "reactflow__edge-condition-1752217130538-line-reply-1752217143130"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "condition-1752217051986",
+        "sourceHandle": null,
+        "target": "line-carousel-1752217063226",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226"
       }
     ]
   },
