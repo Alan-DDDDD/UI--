@@ -810,48 +810,60 @@ app.post('/api/workflows/combine', (req, res) => {
         throw new Error(`工作流程 ${workflowId} 不存在`);
       }
       
+      // 為每個工作流程建立獨立的ID映射
+      const currentMapping = {};
+      
       // 處理節點
-      workflow.nodes.forEach(node => {
-        const newNodeId = `${node.id}_combined_${index}`;
-        nodeIdMapping[node.id] = newNodeId;
-        
-        combinedNodes.push({
-          ...node,
-          id: newNodeId,
-          position: {
-            x: node.position.x + (index * 400), // 水平排列不同流程
-            y: node.position.y
-          }
+      if (workflow.nodes) {
+        workflow.nodes.forEach(node => {
+          const newNodeId = `${node.id}_combined_${index}`;
+          currentMapping[node.id] = newNodeId;
+          
+          combinedNodes.push({
+            ...node,
+            id: newNodeId,
+            position: {
+              x: node.position.x + (index * 400), // 水平排列不同流程
+              y: node.position.y
+            }
+          });
         });
-      });
+      }
       
       // 處理邊
-      workflow.edges.forEach(edge => {
-        combinedEdges.push({
-          ...edge,
-          id: `${edge.id}_combined_${index}`,
-          source: nodeIdMapping[edge.source] || edge.source,
-          target: nodeIdMapping[edge.target] || edge.target
+      if (workflow.edges) {
+        workflow.edges.forEach(edge => {
+          combinedEdges.push({
+            ...edge,
+            id: `${edge.id}_combined_${index}`,
+            source: currentMapping[edge.source] || edge.source,
+            target: currentMapping[edge.target] || edge.target
+          });
         });
-      });
+      }
     });
     
     // 創建新的組合工作流程
     const workflowId = Date.now().toString();
     const combinedWorkflow = {
+      nodes: combinedNodes,
+      edges: combinedEdges,
+      nodeGroups: {}
+    };
+    
+    const combinedMetadata = {
       id: workflowId,
       name,
       description: `組合自 ${workflowIds.length} 個流程`,
-      nodes: combinedNodes,
-      edges: combinedEdges,
-      nodeGroups: {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       nodeCount: combinedNodes.length
     };
     
     workflows[workflowId] = combinedWorkflow;
+    workflowMetadata[workflowId] = combinedMetadata;
     saveData(WORKFLOWS_FILE, workflows);
+    saveData(METADATA_FILE, workflowMetadata);
     
     res.json({ 
       success: true, 
