@@ -4,7 +4,9 @@ import ReactFlow, {
   useNodesState, 
   useEdgesState,
   Controls,
-  Background
+  Background,
+  ReactFlowProvider,
+  useReactFlow
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import NodePanel from './NodePanel';
@@ -34,13 +36,14 @@ const pausedEdgeStyle = {
 const initialNodes = [];
 const initialEdges = [];
 
-function App() {
+function FlowWrapper() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [workflowId, setWorkflowId] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [currentWorkflowName, setCurrentWorkflowName] = useState('新流程');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { project } = useReactFlow();
 
   const onConnect = useCallback((params) => {
     setEdges((eds) => addEdge({...params, ...defaultEdgeOptions, data: { active: true }}, eds));
@@ -142,10 +145,10 @@ function App() {
         return;
       }
 
-      const position = {
+      const position = project({
         x: event.clientX - reactFlowBounds.left,
         y: event.clientY - reactFlowBounds.top,
-      };
+      });
       
       const defaultData = {
         'http-request': { label: 'API呼叫', url: '', method: 'GET' },
@@ -375,6 +378,14 @@ function App() {
         />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ReactFlowProvider>
+      <FlowWrapper />
+    </ReactFlowProvider>
   );
 }
 
