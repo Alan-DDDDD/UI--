@@ -789,6 +789,81 @@ app.get('/api/workflows/:workflowId', (req, res) => {
   res.json(workflow);
 });
 
+// 組合多個工作流程
+app.post('/api/workflows/combine', (req, res) => {
+  const { name, workflowIds } = req.body;
+  
+  if (!name || !workflowIds || workflowIds.length < 2) {
+    return res.status(400).json({ error: '需要提供名稱和至少2個工作流程ID' });
+  }
+  
+  try {
+    const combinedNodes = [];
+    const combinedEdges = [];
+    let nodeIdOffset = 0;
+    const nodeIdMapping = {}; // 舊ID -> 新ID的映射
+    
+    // 合併所有選中的工作流程
+    workflowIds.forEach((workflowId, index) => {
+      const workflow = workflows[workflowId];
+      if (!workflow) {
+        throw new Error(`工作流程 ${workflowId} 不存在`);
+      }
+      
+      // 處理節點
+      workflow.nodes.forEach(node => {
+        const newNodeId = `${node.id}_combined_${index}`;
+        nodeIdMapping[node.id] = newNodeId;
+        
+        combinedNodes.push({
+          ...node,
+          id: newNodeId,
+          position: {
+            x: node.position.x + (index * 400), // 水平排列不同流程
+            y: node.position.y
+          }
+        });
+      });
+      
+      // 處理邊
+      workflow.edges.forEach(edge => {
+        combinedEdges.push({
+          ...edge,
+          id: `${edge.id}_combined_${index}`,
+          source: nodeIdMapping[edge.source] || edge.source,
+          target: nodeIdMapping[edge.target] || edge.target
+        });
+      });
+    });
+    
+    // 創建新的組合工作流程
+    const workflowId = Date.now().toString();
+    const combinedWorkflow = {
+      id: workflowId,
+      name,
+      description: `組合自 ${workflowIds.length} 個流程`,
+      nodes: combinedNodes,
+      edges: combinedEdges,
+      nodeGroups: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      nodeCount: combinedNodes.length
+    };
+    
+    workflows[workflowId] = combinedWorkflow;
+    saveData(WORKFLOWS_FILE, workflows);
+    
+    res.json({ 
+      success: true, 
+      message: '流程組合成功', 
+      workflowId,
+      nodeCount: combinedNodes.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 測試API端點
 app.get('/test/users/:id', (req, res) => {
   const userId = req.params.id;
