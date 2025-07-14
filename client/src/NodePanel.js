@@ -1,6 +1,6 @@
 import React from 'react';
 
-function NodePanel({ onAddNode }) {
+function NodePanel({ onAddNode, compact = false }) {
 
   const nodeTypes = [
     {
@@ -112,25 +112,30 @@ function NodePanel({ onAddNode }) {
 
   return (
     <div className="node-panel">
-      <h3>📦 節點庫</h3>
-      <p style={{fontSize: '12px', color: '#666', margin: '0 0 15px 0'}}>
-        拖拉節點到畫面上，或點擊直接新增
-      </p>
+      {!compact && <h3>📦 節點庫</h3>}
+      {!compact && (
+        <p style={{fontSize: '12px', color: '#666', margin: '0 0 15px 0'}}>
+          拖拉節點到畫面上，或點擊直接新增
+        </p>
+      )}
       
-      <div className="node-library">
+      <div className={`node-library ${compact ? 'compact' : ''}`}>
         {nodeTypes.map((nodeType) => (
           <div
             key={nodeType.type}
-            className="draggable-node"
+            className={`draggable-node ${compact ? 'compact' : ''}`}
             draggable
             onDragStart={(e) => handleDragStart(e, nodeType)}
             onClick={() => addNodeDirectly(nodeType.type)}
+            title={compact ? nodeType.label : ''}
           >
             <div className="node-icon">{nodeType.icon}</div>
-            <div className="node-info">
-              <div className="node-title">{nodeType.label}</div>
-              <div className="node-desc">{nodeType.description}</div>
-            </div>
+            {!compact && (
+              <div className="node-info">
+                <div className="node-title">{nodeType.label}</div>
+                <div className="node-desc">{nodeType.description}</div>
+              </div>
+            )}
           </div>
         ))}
       </div>

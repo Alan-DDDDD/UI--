@@ -12,8 +12,7 @@ import 'reactflow/dist/style.css';
 import NodePanel from './NodePanel';
 import ExecutePanel from './ExecutePanel';
 import NodeEditor from './NodeEditor';
-import WorkflowList from './WorkflowList';
-import TokenManager from './TokenManager';
+import WindowManager from './WindowManager';
 import './App.css';
 
 // 自定義邊樣式
@@ -43,6 +42,7 @@ function FlowWrapper() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [currentWorkflowName, setCurrentWorkflowName] = useState('新流程');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState('full'); // 'full', 'compact', 'hidden'
   const { project } = useReactFlow();
 
   const onConnect = useCallback((params) => {
@@ -324,24 +324,38 @@ function FlowWrapper() {
 
   return (
     <div className="app">
-      <div className="sidebar">
-        <WorkflowList 
-          onSelectWorkflow={handleSelectWorkflow}
-          onNewWorkflow={handleNewWorkflow}
-          currentWorkflowId={workflowId}
-        />
-        <TokenManager />
-        <NodePanel onAddNode={addNode} />
-        <ExecutePanel 
-          nodes={nodes} 
-          edges={edges}
-          workflowId={workflowId}
-          setWorkflowId={setWorkflowId}
-          workflowName={currentWorkflowName}
-          hasUnsavedChanges={hasUnsavedChanges}
-          setHasUnsavedChanges={setHasUnsavedChanges}
-        />
+      {/* 側邊欄切換按鈕 */}
+      <div className="sidebar-toggle">
+        <button 
+          onClick={() => setSidebarMode(sidebarMode === 'full' ? 'compact' : sidebarMode === 'compact' ? 'hidden' : 'full')}
+          className="toggle-btn"
+        >
+          {sidebarMode === 'full' ? '◀' : sidebarMode === 'compact' ? '✕' : '▶'}
+        </button>
       </div>
+      
+      {sidebarMode !== 'hidden' && (
+        <div className={`sidebar ${sidebarMode}`}>
+          <WindowManager 
+            onSelectWorkflow={handleSelectWorkflow}
+            onNewWorkflow={handleNewWorkflow}
+            currentWorkflowId={workflowId}
+            compact={sidebarMode === 'compact'}
+          />
+          <NodePanel onAddNode={addNode} compact={sidebarMode === 'compact'} />
+          {sidebarMode === 'full' && (
+            <ExecutePanel 
+              nodes={nodes} 
+              edges={edges}
+              workflowId={workflowId}
+              setWorkflowId={setWorkflowId}
+              workflowName={currentWorkflowName}
+              hasUnsavedChanges={hasUnsavedChanges}
+              setHasUnsavedChanges={setHasUnsavedChanges}
+            />
+          )}
+        </div>
+      )}
       <div className="flow-container">
         {hasUnsavedChanges && (
           <div className="unsaved-warning-overlay">
