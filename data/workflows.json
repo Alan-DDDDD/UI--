@@ -1729,8 +1729,8 @@
         "id": "existing-workflow-1752547462668",
         "type": "default",
         "position": {
-          "x": 526,
-          "y": 446
+          "x": 326,
+          "y": 379
         },
         "data": {
           "type": "workflow-reference",
@@ -1763,8 +1763,12 @@
         "targetPosition": "left",
         "width": 220,
         "height": 43,
-        "selected": true,
-        "dragging": false
+        "selected": false,
+        "dragging": false,
+        "positionAbsolute": {
+          "x": 326,
+          "y": 379
+        }
       }
     ],
     "edges": [],
