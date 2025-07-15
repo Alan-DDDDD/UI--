@@ -1385,7 +1385,8 @@ label {
   z-index: 100;
 }
 
-.settings-btn {
+.settings-btn,
+.manual-btn {
   background: #2d2d2d;
   color: #e0e0e0;
   border: 1px solid #404040;
@@ -1395,11 +1396,23 @@ label {
   font-size: 16px;
   transition: all 0.2s;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin-left: 10px;
 }
 
-.settings-btn:hover {
+.settings-btn:hover,
+.manual-btn:hover {
   background: #404040;
   transform: scale(1.1);
+}
+
+.manual-btn {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.manual-btn:hover {
+  background: #45a049;
+  border-color: #45a049;
 }
 
 /* 流程設定視窗 */

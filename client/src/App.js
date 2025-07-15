@@ -14,6 +14,7 @@ import ExecutePanel from './ExecutePanel';
 import NodeEditor from './NodeEditor';
 import WindowManager from './WindowManager';
 import WorkflowSettings from './WorkflowSettings';
+import UserManual from './UserManual';
 
 import './App.css';
 
@@ -52,6 +53,7 @@ function FlowWrapper() {
   const [inputParams, setInputParams] = useState([]);
   const [outputParams, setOutputParams] = useState([]);
   const [showWorkflowSettings, setShowWorkflowSettings] = useState(false);
+  const [showUserManual, setShowUserManual] = useState(false);
   const { project } = useReactFlow();
 
   const handleParamsChange = (newInputParams, newOutputParams) => {
@@ -485,7 +487,7 @@ function FlowWrapper() {
             compact={sidebarMode === 'compact'}
           />
           <NodePanel onAddNode={addNode} compact={sidebarMode === 'compact'} />
-          {sidebarMode === 'full' && (
+          {sidebarMode === 'full' ? (
             <ExecutePanel 
               nodes={nodes} 
               edges={edges}
@@ -498,6 +500,37 @@ function FlowWrapper() {
               inputParams={inputParams}
               outputParams={outputParams}
             />
+          ) : sidebarMode === 'compact' && (
+            <div style={{padding: '10px', textAlign: 'center'}}>
+              <button 
+                onClick={async () => {
+                  try {
+                    if (workflowId) {
+                      await fetch(`http://localhost:3001/api/workflows/${workflowId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nodes, edges, nodeGroups, inputParams, outputParams })
+                      });
+                    } else {
+                      const response = await fetch('http://localhost:3001/api/workflows', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: '新流程', nodes, edges, nodeGroups, inputParams, outputParams })
+                      });
+                      const data = await response.json();
+                      setWorkflowId(data.workflowId);
+                    }
+                    setHasUnsavedChanges(false);
+                  } catch (error) {
+                    alert('儲存失敗: ' + error.message);
+                  }
+                }}
+                className={`toolbar-btn ${hasUnsavedChanges ? 'save-btn-highlight' : ''}`}
+                title="儲存流程"
+              >
+                💾
+              </button>
+            </div>
           )}
 
         </div>
@@ -517,6 +550,13 @@ function FlowWrapper() {
             title="流程設定"
           >
             ⚙️
+          </button>
+          <button 
+            onClick={() => setShowUserManual(true)}
+            className="manual-btn"
+            title="使用說明書"
+          >
+            📖
           </button>
         </div>
         {/* 群組功能暫時取消
@@ -567,6 +607,11 @@ function FlowWrapper() {
           inputParams={inputParams}
           outputParams={outputParams}
           onParamsChange={handleParamsChange}
+        />
+        
+        <UserManual
+          isOpen={showUserManual}
+          onClose={() => setShowUserManual(false)}
         />
         
         {showGroupDialog && (
