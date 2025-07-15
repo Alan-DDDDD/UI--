@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups }) {
+function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups, inputParams, outputParams }) {
   const [inputData, setInputData] = useState('{}');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,9 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
         await axios.put(`http://localhost:3001/api/workflows/${workflowId}`, {
           nodes,
           edges,
-          nodeGroups
+          nodeGroups,
+          inputParams,
+          outputParams
         });
         console.log('💾 流程已更新，ID:', workflowId);
         setHasUnsavedChanges(false);
@@ -24,7 +26,9 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
           description: '',
           nodes,
           edges,
-          nodeGroups
+          nodeGroups,
+          inputParams,
+          outputParams
         });
         setWorkflowId(response.data.workflowId);
         console.log('💾 流程已儲存，ID:', response.data.workflowId);
@@ -70,6 +74,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
           const node = result.result;
           const isSuccess = node.success;
           const isNotification = node.data && node.data.type === 'notification';
+          const isWorkflowRef = node.data && node.data.type === 'workflow-reference';
           
           return (
             <div key={index} className={`result-item ${isSuccess ? 'success' : 'error'}`}>
@@ -77,13 +82,52 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
                 <div className="notification-result">
                   📢 {node.data.message}
                 </div>
+              ) : isWorkflowRef ? (
+                <div className="workflow-ref-result">
+                  <div className="success-result">
+                    🔗 子流程 '{node.data.workflowName}' 執行成功
+                    <span className="execution-status success">
+                      ✓ 完成
+                    </span>
+                  </div>
+                  <div className="workflow-execution-stats">
+                    <div className="execution-stat">
+                      <span>🔧</span>
+                      <span>執行了 {node.data.executedNodes} 個節點</span>
+                    </div>
+                    {node.data.returnData && Object.keys(node.data.returnData).length > 0 && (
+                      <div className="execution-stat">
+                        <span>📤</span>
+                        <span>返回 {Object.keys(node.data.returnData).length} 個參數</span>
+                      </div>
+                    )}
+                  </div>
+                  {node.data.returnData && Object.keys(node.data.returnData).length > 0 && (
+                    <details className="return-data-preview">
+                      <summary>📄 查看返回資料</summary>
+                      <pre>{JSON.stringify(node.data.returnData, null, 2)}</pre>
+                    </details>
+                  )}
+                </div>
               ) : isSuccess ? (
                 <div className="success-result">
                   ✅ 步驟 {index + 1} 執行成功
                 </div>
               ) : (
                 <div className="error-result">
-                  ❌ 步驟 {index + 1} 執行失敗：{node.error}
+                  ❌ 步驟 {index + 1} 執行失敗
+                  <span className="execution-status error">
+                    ✗ 失敗
+                  </span>
+                  <div style={{marginTop: '8px', fontSize: '13px'}}>
+                    {node.error}
+                  </div>
+                  {node.details && (
+                    <details className="error-details">
+                      <summary>🔍 查看錯誤詳情</summary>
+                      <pre>{JSON.stringify(node.details, null, 2)}</pre>
+                    </details>
+                  )}
                 </div>
               )}
             </div>

@@ -274,9 +274,54 @@ async function executeNode(node, context) {
       console.log(`🔗 執行引用的工作流程: ${node.data.workflowName || node.data.label} (${refWorkflowId})`);
       
       try {
-        // 創建子流程的執行上下文，繼承當前上下文
+        // 創建子流程上下文
         let subContext = { ...context };
+        
+        // 處理參數映射和傳遞
+        if (node.data.paramMappings && node.data.paramMappings.length > 0) {
+          console.log(`🔗 處理參數映射:`, node.data.paramMappings);
+          
+          // 清空子上下文，只保留系統變數
+          const systemVars = ['_lastResult', '_executionStack', '_usedReplyTokens', 'userId', 'replyToken', 'message', 'type', 'timestamp'];
+          const cleanSubContext = {};
+          systemVars.forEach(key => {
+            if (context[key] !== undefined) {
+              cleanSubContext[key] = context[key];
+            }
+          });
+          subContext = cleanSubContext;
+          
+          // 執行參數映射
+          for (const mapping of node.data.paramMappings) {
+            if (mapping.sourceParam && mapping.targetParam) {
+              let sourceValue = mapping.sourceParam;
+              
+              // 處理變數替換 {variableName}
+              sourceValue = sourceValue.replace(/\{([^}]+)\}/g, (match, key) => {
+                // 優先從當前上下文取值
+                if (context[key] !== undefined) return context[key];
+                // 從上一步結果取值
+                if (context._lastResult?.data?.[key] !== undefined) return context._lastResult.data[key];
+                // 從tokens取值
+                if (tokens[key]) return tokens[key].token;
+                return match;
+              });
+              
+              // 設定目標參數
+              subContext[mapping.targetParam] = sourceValue;
+              console.log(`🔗 映射: ${mapping.sourceParam} → ${mapping.targetParam} = ${sourceValue}`);
+            }
+          }
+        } else {
+          // 如果沒有參數映射，傳遞所有當前上下文
+          console.log(`🔗 沒有參數映射，傳遞完整上下文`);
+        }
         const subResults = [];
+        
+        // 為子流程設定初始結果
+        if (!subContext._lastResult) {
+          subContext._lastResult = { success: true, data: subContext };
+        }
         
         // 過濾出啟用的邊
         const activeEdges = (referencedWorkflow.edges || []).filter(edge => edge.data?.active !== false);
@@ -383,6 +428,21 @@ async function executeNode(node, context) {
         // 移除執行棧記錄
         context._executionStack.delete(refWorkflowId);
         
+        // 處理返回值映射
+        let returnData = subContext._lastResult?.data || {};
+        
+        // 如果目標流程定義了輸出參數，只返回指定的參數
+        if (referencedWorkflow.outputParams && referencedWorkflow.outputParams.length > 0) {
+          const filteredData = {};
+          referencedWorkflow.outputParams.forEach(param => {
+            if (returnData[param.name] !== undefined) {
+              filteredData[param.name] = returnData[param.name];
+            }
+          });
+          returnData = filteredData;
+          console.log(`🔗 根據輸出參數過濾返回值:`, returnData);
+        }
+        
         return { 
           success: true, 
           data: {
@@ -391,15 +451,32 @@ async function executeNode(node, context) {
             workflowName: node.data.workflowName,
             results: subResults,
             finalResult: subContext._lastResult,
+            returnData: returnData,
             executedNodes: subResults.length,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            ...returnData
           }
         };
       } catch (error) {
-        console.log(`❌ 引用流程執行失敗: ${node.data.workflowName}`, error);
+        console.log(`❌ 引用流程執行失敗: ${node.data.workflowName}`, {
+          error: error.message,
+          stack: error.stack,
+          workflowId: refWorkflowId,
+          paramMappings: node.data.paramMappings,
+          subContext: Object.keys(subContext)
+        });
         // 移除執行棧記錄
         context._executionStack.delete(refWorkflowId);
-        return { success: false, error: `引用流程執行失敗: ${error.message}` };
+        return { 
+          success: false, 
+          error: `引用流程執行失敗: ${error.message}`,
+          details: {
+            workflowId: refWorkflowId,
+            workflowName: node.data.workflowName,
+            paramMappings: node.data.paramMappings,
+            availableContext: Object.keys(context)
+          }
+        };
       }
     
     case 'line-push':
@@ -855,7 +932,7 @@ app.post('/api/execute/:workflowId', async (req, res) => {
 // 儲存工作流程
 app.post('/api/workflows', (req, res) => {
   const workflowId = uuidv4();
-  const { name, description, ...workflowData } = req.body;
+  const { name, description, inputParams, outputParams, ...workflowData } = req.body;
   
   // 檢查新流程是否包含循環引用
   if (workflowData.nodes) {
@@ -870,14 +947,20 @@ app.post('/api/workflows', (req, res) => {
     }
   }
   
-  workflows[workflowId] = workflowData;
+  workflows[workflowId] = {
+    ...workflowData,
+    inputParams: inputParams || [],
+    outputParams: outputParams || []
+  };
   workflowMetadata[workflowId] = {
     id: workflowId,
     name: name || '新流程',
     description: description || '',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    nodeCount: workflowData.nodes?.length || 0
+    nodeCount: workflowData.nodes?.length || 0,
+    inputParams: inputParams || [],
+    outputParams: outputParams || []
   };
   
   // 儲存到檔案
@@ -890,7 +973,7 @@ app.post('/api/workflows', (req, res) => {
 // 更新工作流程
 app.put('/api/workflows/:workflowId', (req, res) => {
   const { workflowId } = req.params;
-  const { name, description, ...workflowData } = req.body;
+  const { name, description, inputParams, outputParams, ...workflowData } = req.body;
   
   if (!workflows[workflowId]) {
     return res.status(404).json({ error: '工作流程不存在' });
@@ -916,13 +999,19 @@ app.put('/api/workflows/:workflowId', (req, res) => {
     }
   }
   
-  workflows[workflowId] = workflowData;
+  workflows[workflowId] = {
+    ...workflowData,
+    inputParams: inputParams || [],
+    outputParams: outputParams || []
+  };
   workflowMetadata[workflowId] = {
     ...workflowMetadata[workflowId],
     name: name || workflowMetadata[workflowId].name,
     description: description || workflowMetadata[workflowId].description,
     updatedAt: new Date().toISOString(),
-    nodeCount: workflowData.nodes?.length || 0
+    nodeCount: workflowData.nodes?.length || 0,
+    inputParams: inputParams || [],
+    outputParams: outputParams || []
   };
   
   // 儲存到檔案
@@ -997,6 +1086,62 @@ app.get('/api/workflows/:workflowId', (req, res) => {
     return res.status(404).json({ error: '工作流程不存在' });
   }
   res.json(workflow);
+});
+
+// 驗證參數映射
+app.post('/api/workflows/:workflowId/validate-params', (req, res) => {
+  const { workflowId } = req.params;
+  const { paramMappings, sourceContext } = req.body;
+  
+  const workflow = workflows[workflowId];
+  if (!workflow) {
+    return res.status(404).json({ error: '工作流程不存在' });
+  }
+  
+  const validation = {
+    valid: true,
+    errors: [],
+    warnings: [],
+    mappedParams: {},
+    missingRequired: []
+  };
+  
+  // 檢查必要參數
+  if (workflow.inputParams) {
+    workflow.inputParams.forEach(param => {
+      const mapping = paramMappings.find(m => m.targetParam === param.name);
+      
+      if (param.required && (!mapping || !mapping.sourceParam)) {
+        validation.missingRequired.push(param.name);
+        validation.errors.push(`必要參數 '${param.name}' 未映射`);
+        validation.valid = false;
+      } else if (mapping && mapping.sourceParam) {
+        // 模擬變數替換
+        let resolvedValue = mapping.sourceParam;
+        const unresolvedVars = [];
+        
+        resolvedValue = resolvedValue.replace(/\{([^}]+)\}/g, (match, key) => {
+          if (sourceContext && sourceContext[key] !== undefined) {
+            return sourceContext[key];
+          }
+          unresolvedVars.push(key);
+          return match;
+        });
+        
+        validation.mappedParams[param.name] = {
+          source: mapping.sourceParam,
+          resolved: resolvedValue,
+          unresolvedVars
+        };
+        
+        if (unresolvedVars.length > 0) {
+          validation.warnings.push(`參數 '${param.name}' 中的變數 [${unresolvedVars.join(', ')}] 無法解析`);
+        }
+      }
+    });
+  }
+  
+  res.json(validation);
 });
 
 // 檢查循環引用的遞歸函數

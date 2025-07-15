@@ -12,28 +12,108 @@
     "name": "LINE多流程",
     "description": "",
     "createdAt": "2025-07-11T06:25:31.080Z",
-    "updatedAt": "2025-07-15T00:49:01.044Z",
-    "nodeCount": 7
+    "updatedAt": "2025-07-15T02:36:32.288Z",
+    "nodeCount": 7,
+    "inputParams": [],
+    "outputParams": []
   },
   "081d42c9-dab2-4d1d-b893-b365c33da01d": {
     "id": "081d42c9-dab2-4d1d-b893-b365c33da01d",
     "name": "新流程",
     "description": "",
     "createdAt": "2025-07-14T06:14:52.492Z",
-    "updatedAt": "2025-07-15T00:51:21.354Z",
-    "nodeCount": 1
+    "updatedAt": "2025-07-15T02:07:29.358Z",
+    "nodeCount": 1,
+    "inputParams": [
+      {
+        "id": "1752545209635",
+        "name": "使用者名稱",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      }
+    ],
+    "outputParams": [
+      {
+        "id": "1752545229627",
+        "name": "結果",
+        "type": "string",
+        "description": ""
+      }
+    ]
   },
   "1752485364955": {
     "id": "1752485364955",
     "name": "測試組合流程",
     "description": "組合自 2 個流程: alan_line_msg, LINE多流程",
     "createdAt": "2025-07-14T09:29:24.955Z",
-    "updatedAt": "2025-07-15T00:50:17.548Z",
+    "updatedAt": "2025-07-15T02:36:19.989Z",
     "nodeCount": 1,
     "isComposed": true,
     "referencedWorkflows": [
       "1f33829e-1344-4af6-b8d4-6f0e060ab3d5",
       "5e74ad99-16cb-4fa5-8f95-6c53325a9b62"
+    ],
+    "inputParams": [],
+    "outputParams": []
+  },
+  "842c3fec-0daf-4078-9333-ad3b1bfd685d": {
+    "id": "842c3fec-0daf-4078-9333-ad3b1bfd685d",
+    "name": "參數測試",
+    "description": "",
+    "createdAt": "2025-07-15T02:40:43.861Z",
+    "updatedAt": "2025-07-15T06:03:55.162Z",
+    "nodeCount": 1,
+    "inputParams": [
+      {
+        "id": "1752547261602",
+        "name": "userId",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      },
+      {
+        "id": "1752547272626",
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      },
+      {
+        "id": "1752547393362",
+        "name": "HFCUSERNAME",
+        "type": "string",
+        "required": false,
+        "defaultValue": "",
+        "description": ""
+      }
+    ],
+    "outputParams": [
+      {
+        "id": "1752547284258",
+        "name": "result",
+        "type": "string",
+        "description": ""
+      },
+      {
+        "id": "1752547294546",
+        "name": "status",
+        "type": "string",
+        "description": ""
+      }
     ]
+  },
+  "14062d72-afe9-4a13-b002-cf47316b03c0": {
+    "id": "14062d72-afe9-4a13-b002-cf47316b03c0",
+    "name": "引用參數測試流程",
+    "description": "",
+    "createdAt": "2025-07-15T02:44:16.340Z",
+    "updatedAt": "2025-07-15T05:58:21.545Z",
+    "nodeCount": 1,
+    "inputParams": [],
+    "outputParams": []
   }
 }

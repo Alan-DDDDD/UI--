@@ -749,16 +749,17 @@
           "y": 270
         },
         "data": {
-          "label": "📋 新流程",
+          "label": "📋 測試組合流程",
           "type": "workflow-reference",
-          "workflowId": "081d42c9-dab2-4d1d-b893-b365c33da01d",
-          "workflowName": "新流程"
+          "workflowId": "1752485364955",
+          "workflowName": "測試組合流程",
+          "paramMappings": []
         },
-        "className": "node-existing-workflow",
+        "className": "node-workflow-reference",
         "sourcePosition": "right",
         "targetPosition": "left",
-        "width": 200,
-        "height": 41,
+        "width": 220,
+        "height": 43,
         "selected": true,
         "dragging": false
       }
@@ -793,7 +794,9 @@
         "id": "reactflow__edge-condition-1752215188237-line-reply-1752215293733"
       }
     ],
-    "nodeGroups": {}
+    "nodeGroups": {},
+    "inputParams": [],
+    "outputParams": []
   },
   "081d42c9-dab2-4d1d-b893-b365c33da01d": {
     "nodes": [
@@ -840,7 +843,25 @@
       }
     ],
     "edges": [],
-    "nodeGroups": {}
+    "nodeGroups": {},
+    "inputParams": [
+      {
+        "id": "1752545209635",
+        "name": "使用者名稱",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      }
+    ],
+    "outputParams": [
+      {
+        "id": "1752545229627",
+        "name": "結果",
+        "type": "string",
+        "description": ""
+      }
+    ]
   },
   "1752482143120": {
     "id": "1752482143120",
@@ -1605,18 +1626,150 @@
           "label": "📋 新流程",
           "type": "workflow-reference",
           "workflowId": "081d42c9-dab2-4d1d-b893-b365c33da01d",
-          "workflowName": "新流程"
+          "workflowName": "新流程",
+          "paramMappings": []
         },
-        "className": "node-existing-workflow",
+        "className": "node-workflow-reference",
         "sourcePosition": "right",
         "targetPosition": "left",
-        "width": 200,
-        "height": 41,
+        "width": 220,
+        "height": 43,
         "selected": true,
         "dragging": false
       }
     ],
     "edges": [],
-    "nodeGroups": {}
+    "nodeGroups": {},
+    "inputParams": [],
+    "outputParams": []
+  },
+  "842c3fec-0daf-4078-9333-ad3b1bfd685d": {
+    "nodes": [
+      {
+        "id": "data-map-1752558025264",
+        "type": "default",
+        "position": {
+          "x": 362.3857844862471,
+          "y": 285.62029438023194
+        },
+        "data": {
+          "type": "data-map",
+          "label": "測試返回結果",
+          "name": "測試返回結果",
+          "mappings": [
+            {
+              "from": "HFCUSERNAME",
+              "to": "result"
+            },
+            {
+              "from": "message",
+              "to": "status"
+            }
+          ]
+        },
+        "className": "node-data-map",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 362.3857844862471,
+          "y": 285.62029438023194
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [],
+    "nodeGroups": {},
+    "inputParams": [
+      {
+        "id": "1752547261602",
+        "name": "userId",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      },
+      {
+        "id": "1752547272626",
+        "name": "message",
+        "type": "string",
+        "required": true,
+        "defaultValue": "",
+        "description": ""
+      },
+      {
+        "id": "1752547393362",
+        "name": "HFCUSERNAME",
+        "type": "string",
+        "required": false,
+        "defaultValue": "",
+        "description": ""
+      }
+    ],
+    "outputParams": [
+      {
+        "id": "1752547284258",
+        "name": "result",
+        "type": "string",
+        "description": ""
+      },
+      {
+        "id": "1752547294546",
+        "name": "status",
+        "type": "string",
+        "description": ""
+      }
+    ]
+  },
+  "14062d72-afe9-4a13-b002-cf47316b03c0": {
+    "nodes": [
+      {
+        "id": "existing-workflow-1752547462668",
+        "type": "default",
+        "position": {
+          "x": 526,
+          "y": 446
+        },
+        "data": {
+          "type": "workflow-reference",
+          "label": "📋 參數測試",
+          "workflowId": "842c3fec-0daf-4078-9333-ad3b1bfd685d",
+          "workflowName": "參數測試",
+          "paramMappings": [
+            {
+              "id": "17525474681780.8121272322921519",
+              "sourceParam": "{userId}",
+              "targetParam": "userId",
+              "defaultValue": ""
+            },
+            {
+              "id": "17525474681780.7335551374401167",
+              "sourceParam": "{message}",
+              "targetParam": "message",
+              "defaultValue": ""
+            },
+            {
+              "id": "17525474681780.8653844192817417",
+              "sourceParam": "{HFCUSERNAME}",
+              "targetParam": "HFCUSERNAME",
+              "defaultValue": ""
+            }
+          ]
+        },
+        "className": "node-workflow-reference",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 220,
+        "height": 43,
+        "selected": true,
+        "dragging": false
+      }
+    ],
+    "edges": [],
+    "nodeGroups": {},
+    "inputParams": [],
+    "outputParams": []
   }
 }

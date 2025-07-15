@@ -15,7 +15,8 @@ function NodePanel({ onAddNode, compact = false }) {
       { type: 'line-carousel', icon: '🎠', label: 'LINE多頁', description: '多頁訊息卡片' }
     ],
     '觸發器': [
-      { type: 'webhook-trigger', icon: '🔗', label: 'Webhook觸發', description: '接收外部觸發' }
+      { type: 'webhook-trigger', icon: '🔗', label: 'Webhook觸發', description: '接收外部觸發' },
+      { type: 'program-entry', icon: '🚀', label: '程式進入點', description: '流程的起始點' }
     ],
     '流程': [
       { type: 'existing-workflow', icon: '📋', label: '現有流程', description: '引用現有流程' }
@@ -73,6 +74,7 @@ function NodePanel({ onAddNode, compact = false }) {
         }
       },
       'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
+      'program-entry': { label: '程式進入點', name: '開始', description: '流程的起始點' },
       'notification': { label: '顯示訊息', message: '' },
       'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程' }
     };

@@ -13,6 +13,8 @@ import NodePanel from './NodePanel';
 import ExecutePanel from './ExecutePanel';
 import NodeEditor from './NodeEditor';
 import WindowManager from './WindowManager';
+import WorkflowSettings from './WorkflowSettings';
+
 import './App.css';
 
 // 自定義邊樣式
@@ -47,7 +49,16 @@ function FlowWrapper() {
   const [showGroupDialog, setShowGroupDialog] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [nodeGroups, setNodeGroups] = useState({}); // groupId -> [nodeIds]
+  const [inputParams, setInputParams] = useState([]);
+  const [outputParams, setOutputParams] = useState([]);
+  const [showWorkflowSettings, setShowWorkflowSettings] = useState(false);
   const { project } = useReactFlow();
+
+  const handleParamsChange = (newInputParams, newOutputParams) => {
+    setInputParams(newInputParams);
+    setOutputParams(newOutputParams);
+    setHasUnsavedChanges(true);
+  };
 
   const handleNodesChange = useCallback((changes) => {
     onNodesChange(changes);
@@ -217,8 +228,9 @@ function FlowWrapper() {
           }
         },
         'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
+        'program-entry': { label: '程式進入點', name: '開始', description: '流程的起始點' },
         'notification': { label: '顯示訊息', message: '' },
-        'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程' }
+        'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程', paramMappings: [] }
       };
 
       const newNode = {
@@ -430,6 +442,8 @@ function FlowWrapper() {
       setNodes(nodesWithType);
       setEdges(workflow.edges || []);
       setNodeGroups(workflow.nodeGroups || {});
+      setInputParams(workflow.inputParams || []);
+      setOutputParams(workflow.outputParams || []);
       setWorkflowId(selectedWorkflowId);
       setCurrentWorkflowName(workflow.name || '流程');
       setHasUnsavedChanges(false);
@@ -443,6 +457,8 @@ function FlowWrapper() {
     setNodes([]);
     setEdges([]);
     setNodeGroups({});
+    setInputParams([]);
+    setOutputParams([]);
     setWorkflowId(null);
     setCurrentWorkflowName('新流程');
     setHasUnsavedChanges(false);
@@ -479,8 +495,11 @@ function FlowWrapper() {
               hasUnsavedChanges={hasUnsavedChanges}
               setHasUnsavedChanges={setHasUnsavedChanges}
               nodeGroups={nodeGroups}
+              inputParams={inputParams}
+              outputParams={outputParams}
             />
           )}
+
         </div>
       )}
       <div className="flow-container">
@@ -489,6 +508,17 @@ function FlowWrapper() {
             ⚠️ 有未儲存的變更，請先儲存流程
           </div>
         )}
+        
+        {/* 流程設定按鈕 */}
+        <div className="workflow-settings-btn">
+          <button 
+            onClick={() => setShowWorkflowSettings(true)}
+            className="settings-btn"
+            title="流程設定"
+          >
+            ⚙️
+          </button>
+        </div>
         {/* 群組功能暫時取消
         {selectedNodes.length > 1 && (
           <div className="group-controls">
@@ -527,6 +557,16 @@ function FlowWrapper() {
           onUpdateNode={updateNode}
           onDeleteNode={deleteNode}
           onClose={() => setSelectedNode(null)}
+        />
+        
+        <WorkflowSettings
+          isOpen={showWorkflowSettings}
+          onClose={() => setShowWorkflowSettings(false)}
+          workflowName={currentWorkflowName}
+          onWorkflowNameChange={setCurrentWorkflowName}
+          inputParams={inputParams}
+          outputParams={outputParams}
+          onParamsChange={handleParamsChange}
         />
         
         {showGroupDialog && (

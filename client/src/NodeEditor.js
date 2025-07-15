@@ -1,6 +1,241 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 參數映射編輯器組件
+function ParamMappingEditor({ workflowId, paramMappings, onMappingsChange }) {
+  const [targetWorkflow, setTargetWorkflow] = useState(null);
+  const [availableVars, setAvailableVars] = useState([]);
+  const [validation, setValidation] = useState(null);
+  const [isValidating, setIsValidating] = useState(false);
+  
+  useEffect(() => {
+    if (workflowId) {
+      loadTargetWorkflow(workflowId);
+    }
+  }, [workflowId]);
+  
+  const loadTargetWorkflow = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/workflows/${id}`);
+      setTargetWorkflow(response.data);
+      
+      // 提取可用變數（從常用上下文和輸入參數）
+      const commonVars = ['userId', 'message', 'replyToken', 'timestamp'];
+      const inputVars = response.data.inputParams?.map(p => p.name) || [];
+      setAvailableVars([...commonVars, ...inputVars]);
+    } catch (error) {
+      console.error('載入目標流程失敗:', error);
+    }
+  };
+  
+  const addMapping = () => {
+    const newMapping = {
+      id: Date.now().toString(),
+      sourceParam: '',
+      targetParam: '',
+      defaultValue: ''
+    };
+    onMappingsChange([...paramMappings, newMapping]);
+  };
+  
+  const autoMapParams = () => {
+    if (!targetWorkflow?.inputParams) return;
+    
+    const autoMappings = [];
+    targetWorkflow.inputParams.forEach(param => {
+      // 嘗試自動映射同名參數
+      if (availableVars.includes(param.name)) {
+        autoMappings.push({
+          id: Date.now().toString() + Math.random(),
+          sourceParam: `{${param.name}}`,
+          targetParam: param.name,
+          defaultValue: param.defaultValue || ''
+        });
+      } else {
+        // 為未映射的參數創建空映射
+        autoMappings.push({
+          id: Date.now().toString() + Math.random(),
+          sourceParam: '',
+          targetParam: param.name,
+          defaultValue: param.defaultValue || ''
+        });
+      }
+    });
+    
+    onMappingsChange(autoMappings);
+  };
+  
+  const validateParams = async () => {
+    if (!workflowId || !paramMappings.length) return;
+    
+    setIsValidating(true);
+    try {
+      const response = await axios.post(`http://localhost:3001/api/workflows/${workflowId}/validate-params`, {
+        paramMappings,
+        sourceContext: {
+          userId: 'U1234567890',
+          message: '測試訊息',
+          replyToken: 'test-reply-token',
+          timestamp: Date.now()
+        }
+      });
+      setValidation(response.data);
+    } catch (error) {
+      console.error('驗證參數失敗:', error);
+    }
+    setIsValidating(false);
+  };
+  
+  useEffect(() => {
+    if (paramMappings.length > 0) {
+      const timer = setTimeout(validateParams, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [paramMappings, workflowId]);
+  
+  const updateMapping = (index, field, value) => {
+    const updated = [...paramMappings];
+    updated[index] = { ...updated[index], [field]: value };
+    onMappingsChange(updated);
+  };
+  
+  const removeMapping = (index) => {
+    const updated = paramMappings.filter((_, i) => i !== index);
+    onMappingsChange(updated);
+  };
+  
+  if (!targetWorkflow || !targetWorkflow.inputParams?.length) {
+    return (
+      <div style={{marginTop: '15px', padding: '10px', background: '#404040', borderRadius: '4px'}}>
+        <small style={{color: '#b0b0b0'}}>
+          {!targetWorkflow ? '載入中...' : '此流程沒有定義輸入參數'}
+        </small>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="param-mapping-editor">
+      <div className="param-mapping-header">
+        <label>🔗 參數映射</label>
+        <div className="mapping-controls">
+          <button onClick={autoMapParams} className="auto-map-btn">✨ 自動映射</button>
+          <button onClick={addMapping} className="add-param-btn">+ 新增</button>
+        </div>
+      </div>
+      
+      {availableVars.length > 0 && (
+        <div className="available-vars">
+          <small>
+            📊 可用變數: {availableVars.map(v => `{${v}}`).join(', ')}
+          </small>
+        </div>
+      )}
+      
+      {paramMappings.map((mapping, index) => (
+        <div key={mapping.id} className="mapping-item">
+          <div className="mapping-row">
+            <input 
+              placeholder="來源參數 (例: {userId})"
+              value={mapping.sourceParam}
+              onChange={(e) => updateMapping(index, 'sourceParam', e.target.value)}
+              className="mapping-source-input"
+              list={`sourceVars-${index}`}
+            />
+            <datalist id={`sourceVars-${index}`}>
+              {availableVars.map(v => (
+                <option key={v} value={`{${v}}`} />
+              ))}
+            </datalist>
+            <span className="mapping-arrow">→</span>
+            <select 
+              value={mapping.targetParam}
+              onChange={(e) => updateMapping(index, 'targetParam', e.target.value)}
+              className="mapping-target-select"
+            >
+              <option value="">選擇目標參數</option>
+              {targetWorkflow.inputParams.map(param => (
+                <option key={param.id} value={param.name}>
+                  {param.name} ({param.type}){param.required ? ' *' : ''}
+                </option>
+              ))}
+            </select>
+            <button 
+              onClick={() => removeMapping(index)}
+              className="mapping-remove-btn"
+            >
+              ✕
+            </button>
+          </div>
+          {mapping.targetParam && targetWorkflow.inputParams.find(p => p.name === mapping.targetParam) && (
+            <div className="param-description">
+              📝 {targetWorkflow.inputParams.find(p => p.name === mapping.targetParam).description || '無描述'}
+              {targetWorkflow.inputParams.find(p => p.name === mapping.targetParam).defaultValue && (
+                <span> | 預設: {targetWorkflow.inputParams.find(p => p.name === mapping.targetParam).defaultValue}</span>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+      
+      {paramMappings.length === 0 && (
+        <div className="empty-mapping">
+          尚未設定參數映射
+        </div>
+      )}
+      
+      <div style={{marginTop: '10px'}}>
+        <button 
+          onClick={validateParams} 
+          disabled={isValidating || !paramMappings.length}
+          className="validate-btn"
+        >
+          {isValidating ? '驗證中...' : '🔍 驗證映射'}
+        </button>
+      </div>
+      
+      {validation && (
+        <div className={`validation-result ${validation.valid ? 'success' : 'error'}`}>
+          <div className="validation-title">
+            {validation.valid ? '✅ 映射驗證通過' : '❌ 映射驗證失敗'}
+          </div>
+          
+          {validation.errors.length > 0 && (
+            <div className="validation-errors">
+              {validation.errors.map((error, i) => (
+                <div key={i}>• {error}</div>
+              ))}
+            </div>
+          )}
+          
+          {validation.warnings.length > 0 && (
+            <div className="validation-warnings">
+              {validation.warnings.map((warning, i) => (
+                <div key={i}>⚠️ {warning}</div>
+              ))}
+            </div>
+          )}
+          
+          {Object.keys(validation.mappedParams).length > 0 && (
+            <details className="validation-details">
+              <summary>查看映射結果</summary>
+              <pre>
+                {Object.entries(validation.mappedParams).map(([param, info]) => (
+                  `${param}: ${info.resolved}${info.unresolvedVars.length > 0 ? ` (未解析: ${info.unresolvedVars.join(', ')})` : ''}`
+                )).join('\n')}
+              </pre>
+            </details>
+          )}
+        </div>
+      )}
+      
+      <div className="mapping-hint">
+        💡 來源參數可使用 {'{variableName}'} 格式引用變數
+      </div>
+    </div>
+  );
+}
+
 // 流程選擇器組件
 function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflowId }) {
   const [workflows, setWorkflows] = useState([]);
@@ -29,7 +264,7 @@ function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflo
           const workflowId = e.target.value;
           const workflow = workflows.find(w => w.id === workflowId);
           if (workflow) {
-            onSelectWorkflow(workflowId, workflow.name);
+            onSelectWorkflow(workflowId, workflow.name, workflow);
           }
         }}
         style={{width: '100%', marginTop: '8px'}}
@@ -603,23 +838,52 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
           </div>
         );
       
+      case 'program-entry':
+        return (
+          <div>
+            <h4>🚀 編輯程式進入點</h4>
+            <input 
+              placeholder="進入點名稱"
+              value={config.name || ''}
+              onChange={(e) => setConfig({...config, name: e.target.value})}
+            />
+            <textarea 
+              placeholder="描述這個流程的作用"
+              value={config.description || ''}
+              onChange={(e) => setConfig({...config, description: e.target.value})}
+              rows={2}
+            />
+          </div>
+        );
+      
       case 'existing-workflow':
+      case 'workflow-reference':
         return (
           <div>
             <h4>📋 編輯現有流程</h4>
             <WorkflowSelector 
               selectedWorkflowId={config.workflowId || ''}
               currentWorkflowId={selectedNode?.id}
-              onSelectWorkflow={(workflowId, workflowName) => {
+              onSelectWorkflow={(workflowId, workflowName, workflowParams) => {
                 setConfig({
                   ...config, 
                   workflowId, 
                   workflowName,
                   type: 'workflow-reference',
-                  label: `📋 ${workflowName}`
+                  label: `📋 ${workflowName}`,
+                  paramMappings: config.paramMappings || []
                 });
               }}
             />
+            {config.workflowId && (
+              <ParamMappingEditor 
+                workflowId={config.workflowId}
+                paramMappings={config.paramMappings || []}
+                onMappingsChange={(mappings) => {
+                  setConfig({ ...config, paramMappings: mappings });
+                }}
+              />
+            )}
           </div>
         );
 
