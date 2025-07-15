@@ -16,6 +16,9 @@ function NodePanel({ onAddNode, compact = false }) {
     ],
     '觸發器': [
       { type: 'webhook-trigger', icon: '🔗', label: 'Webhook觸發', description: '接收外部觸發' }
+    ],
+    '流程': [
+      { type: 'existing-workflow', icon: '📋', label: '現有流程', description: '引用現有流程' }
     ]
   };
 
@@ -70,7 +73,8 @@ function NodePanel({ onAddNode, compact = false }) {
         }
       },
       'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
-      'notification': { label: '顯示訊息', message: '' }
+      'notification': { label: '顯示訊息', message: '' },
+      'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程' }
     };
     
     onAddNode(nodeType, defaultData[nodeType] || { label: nodeType });

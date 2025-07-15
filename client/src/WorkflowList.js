@@ -81,7 +81,8 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId }) {
       }
     } catch (error) {
       console.error('組合流程失敗:', error);
-      alert('組合流程失敗: ' + error.response?.data?.error || error.message);
+      const errorMessage = error.response?.data?.error || error.message;
+      alert('組合流程失敗: ' + errorMessage);
     }
   };
 

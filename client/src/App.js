@@ -217,7 +217,8 @@ function FlowWrapper() {
           }
         },
         'webhook-trigger': { label: 'Webhook觸發', name: '', description: '' },
-        'notification': { label: '顯示訊息', message: '' }
+        'notification': { label: '顯示訊息', message: '' },
+        'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程' }
       };
 
       const newNode = {
@@ -434,6 +435,7 @@ function FlowWrapper() {
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('載入流程失敗:', error);
+      alert('載入流程失敗: ' + error.message);
     }
   };
 

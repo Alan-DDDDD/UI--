@@ -965,6 +965,17 @@ label {
   color: #000 !important;
 }
 
+/* 流程引用節點 - 灰色 */
+.react-flow__node.node-workflow-reference,
+.react-flow__node.node-existing-workflow {
+  background: #4a5568 !important;
+  border-color: #718096 !important;
+  color: #e2e8f0 !important;
+  font-weight: bold !important;
+  min-width: 200px !important;
+  text-align: center !important;
+}
+
 .react-flow__node:hover {
   border-color: #4CAF50 !important;
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;

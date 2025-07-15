@@ -31,7 +31,8 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
         setHasUnsavedChanges(false);
       }
     } catch (error) {
-      alert('儲存失敗: ' + error.message);
+      const errorMessage = error.response?.data?.error || error.message;
+      alert('儲存失敗: ' + errorMessage);
     }
   };
 
@@ -52,7 +53,8 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
       );
       setResults(response.data);
     } catch (error) {
-      alert('執行失敗: ' + error.message);
+      const errorMessage = error.response?.data?.error || error.message;
+      alert('執行失敗: ' + errorMessage);
     }
     setLoading(false);
   };

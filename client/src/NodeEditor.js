@@ -1,6 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 流程選擇器組件
+function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflowId }) {
+  const [workflows, setWorkflows] = useState([]);
+  
+  useEffect(() => {
+    loadWorkflows();
+  }, []);
+  
+  const loadWorkflows = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/workflows');
+      // 過濾掉當前流程，避免自我引用
+      const availableWorkflows = response.data.workflows.filter(w => w.id !== currentWorkflowId);
+      setWorkflows(availableWorkflows);
+    } catch (error) {
+      console.error('載入流程列表失敗:', error);
+    }
+  };
+  
+  return (
+    <div>
+      <label>選擇要引用的流程：</label>
+      <select 
+        value={selectedWorkflowId}
+        onChange={(e) => {
+          const workflowId = e.target.value;
+          const workflow = workflows.find(w => w.id === workflowId);
+          if (workflow) {
+            onSelectWorkflow(workflowId, workflow.name);
+          }
+        }}
+        style={{width: '100%', marginTop: '8px'}}
+      >
+        <option value="">請選擇流程</option>
+        {workflows.map(workflow => (
+          <option key={workflow.id} value={workflow.id}>
+            {workflow.isComposed ? '🔗 ' : ''}{workflow.name} ({workflow.nodeCount} 個節點)
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
   const [config, setConfig] = useState({});
   const [tokens, setTokens] = useState([]);
@@ -555,6 +599,26 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
               value={config.description || ''}
               onChange={(e) => setConfig({...config, description: e.target.value})}
               rows={2}
+            />
+          </div>
+        );
+      
+      case 'existing-workflow':
+        return (
+          <div>
+            <h4>📋 編輯現有流程</h4>
+            <WorkflowSelector 
+              selectedWorkflowId={config.workflowId || ''}
+              currentWorkflowId={selectedNode?.id}
+              onSelectWorkflow={(workflowId, workflowName) => {
+                setConfig({
+                  ...config, 
+                  workflowId, 
+                  workflowName,
+                  type: 'workflow-reference',
+                  label: `📋 ${workflowName}`
+                });
+              }}
             />
           </div>
         );

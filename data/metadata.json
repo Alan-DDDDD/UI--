@@ -4,7 +4,7 @@
     "name": "alan_line_msg",
     "description": "",
     "createdAt": "2025-07-11T01:51:03.388Z",
-    "updatedAt": "2025-07-14T08:12:02.938Z",
+    "updatedAt": "2025-07-14T09:10:59.520Z",
     "nodeCount": 12
   },
   "5e74ad99-16cb-4fa5-8f95-6c53325a9b62": {
@@ -12,15 +12,28 @@
     "name": "LINE多流程",
     "description": "",
     "createdAt": "2025-07-11T06:25:31.080Z",
-    "updatedAt": "2025-07-14T08:13:15.281Z",
-    "nodeCount": 6
+    "updatedAt": "2025-07-15T00:49:01.044Z",
+    "nodeCount": 7
   },
   "081d42c9-dab2-4d1d-b893-b365c33da01d": {
     "id": "081d42c9-dab2-4d1d-b893-b365c33da01d",
     "name": "新流程",
     "description": "",
     "createdAt": "2025-07-14T06:14:52.492Z",
-    "updatedAt": "2025-07-14T06:14:52.492Z",
-    "nodeCount": 0
+    "updatedAt": "2025-07-15T00:51:21.354Z",
+    "nodeCount": 1
+  },
+  "1752485364955": {
+    "id": "1752485364955",
+    "name": "測試組合流程",
+    "description": "組合自 2 個流程: alan_line_msg, LINE多流程",
+    "createdAt": "2025-07-14T09:29:24.955Z",
+    "updatedAt": "2025-07-15T00:50:17.548Z",
+    "nodeCount": 1,
+    "isComposed": true,
+    "referencedWorkflows": [
+      "1f33829e-1344-4af6-b8d4-6f0e060ab3d5",
+      "5e74ad99-16cb-4fa5-8f95-6c53325a9b62"
+    ]
   }
 }

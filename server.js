@@ -250,6 +250,158 @@ async function executeNode(node, context) {
         }
       };
     
+    case 'workflow-reference':
+    case 'existing-workflow':
+      // 執行引用的工作流程
+      const { workflowId: refWorkflowId } = node.data;
+      const referencedWorkflow = workflows[refWorkflowId];
+      
+      if (!referencedWorkflow) {
+        return { success: false, error: `引用的工作流程 ${refWorkflowId} 不存在` };
+      }
+      
+      // 檢查循環引用（運行時檢查）
+      if (!context._executionStack) {
+        context._executionStack = new Set();
+      }
+      
+      if (context._executionStack.has(refWorkflowId)) {
+        return { success: false, error: `檢測到循環引用：流程 ${refWorkflowId} 正在執行中` };
+      }
+      
+      context._executionStack.add(refWorkflowId);
+      
+      console.log(`🔗 執行引用的工作流程: ${node.data.workflowName || node.data.label} (${refWorkflowId})`);
+      
+      try {
+        // 創建子流程的執行上下文，繼承當前上下文
+        let subContext = { ...context };
+        const subResults = [];
+        
+        // 過濾出啟用的邊
+        const activeEdges = (referencedWorkflow.edges || []).filter(edge => edge.data?.active !== false);
+        
+        // 使用與LINE Webhook相同的執行邏輯來處理子流程
+        const triggerNodes = referencedWorkflow.nodes.filter(n => n.data.type === 'webhook-trigger');
+        
+        if (triggerNodes.length > 0) {
+          // 有webhook-trigger節點，使用條件分支邏輯
+          for (const triggerNode of triggerNodes) {
+            console.log(`🔧 子流程執行起點: ${triggerNode.id}`);
+            const result = await executeNode(triggerNode, subContext);
+            subResults.push({ nodeId: triggerNode.id, result });
+            subContext[triggerNode.id] = result.data;
+            subContext._lastResult = result;
+            
+            // 找到這個 trigger 連接的條件節點
+            const connectedConditionEdges = activeEdges.filter(edge => 
+              edge.source === triggerNode.id && 
+              referencedWorkflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+            );
+            
+            let conditionMatched = false;
+            
+            // 執行條件節點
+            for (const edge of connectedConditionEdges) {
+              const conditionNode = referencedWorkflow.nodes.find(n => n.id === edge.target);
+              if (conditionNode) {
+                const conditionResult = await executeNode(conditionNode, subContext);
+                subResults.push({ nodeId: conditionNode.id, result: conditionResult });
+                subContext[conditionNode.id] = conditionResult.data;
+                subContext._lastResult = conditionResult;
+                
+                // 如果條件為 true，執行連接的節點
+                if (conditionResult.data) {
+                  const actionEdges = activeEdges.filter(e => e.source === conditionNode.id);
+                  for (const actionEdge of actionEdges) {
+                    const actionNode = referencedWorkflow.nodes.find(n => n.id === actionEdge.target);
+                    if (actionNode) {
+                      console.log(`✅ 子流程條件為 true，執行: ${actionNode.id}`);
+                      const actionResult = await executeNode(actionNode, subContext);
+                      subResults.push({ nodeId: actionNode.id, result: actionResult });
+                      
+                      if (actionResult.success) {
+                        subContext[actionNode.id] = actionResult.data;
+                        subContext._lastResult = actionResult;
+                      }
+                    }
+                  }
+                  conditionMatched = true;
+                }
+              }
+            }
+            
+            // 如果沒有條件匹配，執行預設節點
+            if (!conditionMatched) {
+              const defaultEdges = activeEdges.filter(edge => 
+                edge.source === triggerNode.id && 
+                !referencedWorkflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+              );
+              
+              for (const edge of defaultEdges) {
+                const defaultNode = referencedWorkflow.nodes.find(n => n.id === edge.target);
+                if (defaultNode) {
+                  console.log(`💬 子流程執行預設節點: ${defaultNode.id}`);
+                  const defaultResult = await executeNode(defaultNode, subContext);
+                  subResults.push({ nodeId: defaultNode.id, result: defaultResult });
+                  
+                  if (defaultResult.success) {
+                    subContext[defaultNode.id] = defaultResult.data;
+                    subContext._lastResult = defaultResult;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        } else {
+          // 沒有webhook-trigger，順序執行所有節點
+          for (const subNode of referencedWorkflow.nodes) {
+            const hasActiveConnection = activeEdges.some(edge => edge.target === subNode.id) || 
+                                       referencedWorkflow.nodes.indexOf(subNode) === 0;
+            
+            if (!hasActiveConnection && referencedWorkflow.nodes.indexOf(subNode) !== 0) {
+              console.log(`⏸️ 跳過子流程節點 ${subNode.id}，因為沒有啟用的連接`);
+              continue;
+            }
+            
+            const subResult = await executeNode(subNode, subContext);
+            subResults.push({ nodeId: subNode.id, result: subResult });
+            
+            if (subResult.success) {
+              subContext[subNode.id] = subResult.data;
+              subContext._lastResult = subResult;
+            } else {
+              subContext._lastResult = subResult;
+              break;
+            }
+          }
+        }
+        
+        console.log(`✅ 引用流程執行完成: ${node.data.workflowName}`);
+        
+        // 移除執行棧記錄
+        context._executionStack.delete(refWorkflowId);
+        
+        return { 
+          success: true, 
+          data: {
+            type: 'workflow-reference',
+            workflowId: refWorkflowId,
+            workflowName: node.data.workflowName,
+            results: subResults,
+            finalResult: subContext._lastResult,
+            executedNodes: subResults.length,
+            timestamp: new Date().toISOString()
+          }
+        };
+      } catch (error) {
+        console.log(`❌ 引用流程執行失敗: ${node.data.workflowName}`, error);
+        // 移除執行棧記錄
+        context._executionStack.delete(refWorkflowId);
+        return { success: false, error: `引用流程執行失敗: ${error.message}` };
+      }
+    
     case 'line-push':
       const pushAccessTokenTemplate = node.data.headers?.Authorization?.replace('Bearer ', '');
       const pushUserId = node.data.body?.to;
@@ -644,28 +796,53 @@ app.post('/api/execute/:workflowId', async (req, res) => {
   const results = [];
   
   try {
-    // 過濾出啟用的邊
-    const activeEdges = workflow.edges.filter(edge => edge.data?.active !== false);
-    
-    for (const node of workflow.nodes) {
-      // 檢查是否有啟用的邊連接到此節點
-      const hasActiveConnection = activeEdges.some(edge => edge.target === node.id) || 
-                                 workflow.nodes.indexOf(node) === 0; // 第一個節點總是執行
+    // 檢查是否為組合流程
+    if (workflow.isComposed) {
+      console.log(`🔗 執行組合流程: ${workflowId}`);
       
-      if (!hasActiveConnection && workflow.nodes.indexOf(node) !== 0) {
-        console.log(`⏸️ 跳過節點 ${node.id}，因為沒有啟用的連接`);
-        continue;
+      // 按順序執行每個引用的流程節點
+      for (const node of workflow.nodes) {
+        if (node.data.type === 'workflow-reference') {
+          console.log(`📋 執行引用流程: ${node.data.workflowName}`);
+          const result = await executeNode(node, context);
+          results.push({ nodeId: node.id, result });
+          
+          if (result.success) {
+            context[node.id] = result.data;
+            context._lastResult = result;
+            // 將子流程的最終結果作為下一個流程的輸入
+            if (result.data.finalResult) {
+              context._lastResult = result.data.finalResult;
+            }
+          } else {
+            context._lastResult = result;
+            break;
+          }
+        }
       }
+    } else {
+      // 一般流程執行邏輯
+      const activeEdges = workflow.edges.filter(edge => edge.data?.active !== false);
       
-      const result = await executeNode(node, context);
-      results.push({ nodeId: node.id, result });
-      
-      if (result.success) {
-        context[node.id] = result.data;
-        context._lastResult = result;
-      } else {
-        context._lastResult = result;
-        break;
+      for (const node of workflow.nodes) {
+        const hasActiveConnection = activeEdges.some(edge => edge.target === node.id) || 
+                                   workflow.nodes.indexOf(node) === 0;
+        
+        if (!hasActiveConnection && workflow.nodes.indexOf(node) !== 0) {
+          console.log(`⏸️ 跳過節點 ${node.id}，因為沒有啟用的連接`);
+          continue;
+        }
+        
+        const result = await executeNode(node, context);
+        results.push({ nodeId: node.id, result });
+        
+        if (result.success) {
+          context[node.id] = result.data;
+          context._lastResult = result;
+        } else {
+          context._lastResult = result;
+          break;
+        }
       }
     }
     
@@ -679,6 +856,19 @@ app.post('/api/execute/:workflowId', async (req, res) => {
 app.post('/api/workflows', (req, res) => {
   const workflowId = uuidv4();
   const { name, description, ...workflowData } = req.body;
+  
+  // 檢查新流程是否包含循環引用
+  if (workflowData.nodes) {
+    for (const node of workflowData.nodes) {
+      if ((node.data.type === 'workflow-reference' || node.data.type === 'existing-workflow') && node.data.workflowId) {
+        if (checkCircularReference(node.data.workflowId, [workflowId])) {
+          return res.status(400).json({ 
+            error: `檢測到循環引用：節點引用的流程 ${workflowMetadata[node.data.workflowId]?.name || node.data.workflowId} 會導致無窮迴圈` 
+          });
+        }
+      }
+    }
+  }
   
   workflows[workflowId] = workflowData;
   workflowMetadata[workflowId] = {
@@ -704,6 +894,26 @@ app.put('/api/workflows/:workflowId', (req, res) => {
   
   if (!workflows[workflowId]) {
     return res.status(404).json({ error: '工作流程不存在' });
+  }
+  
+  // 檢查更新後的流程是否包含循環引用
+  if (workflowData.nodes) {
+    for (const node of workflowData.nodes) {
+      if ((node.data.type === 'workflow-reference' || node.data.type === 'existing-workflow') && node.data.workflowId) {
+        // 檢查是否引用自己
+        if (node.data.workflowId === workflowId) {
+          return res.status(400).json({ 
+            error: `檢測到自我引用：流程不能引用自己` 
+          });
+        }
+        // 檢查是否形成循環
+        if (checkCircularReference(node.data.workflowId, [workflowId])) {
+          return res.status(400).json({ 
+            error: `檢測到循環引用：節點引用的流程 ${workflowMetadata[node.data.workflowId]?.name || node.data.workflowId} 會導致無窮迴圈` 
+          });
+        }
+      }
+    }
   }
   
   workflows[workflowId] = workflowData;
@@ -789,7 +999,49 @@ app.get('/api/workflows/:workflowId', (req, res) => {
   res.json(workflow);
 });
 
-// 組合多個工作流程
+// 檢查循環引用的遞歸函數
+function checkCircularReference(workflowId, targetWorkflowIds, visited = new Set()) {
+  if (visited.has(workflowId)) {
+    return true; // 發現循環
+  }
+  
+  visited.add(workflowId);
+  
+  const workflow = workflows[workflowId];
+  if (!workflow) return false;
+  
+  // 檢查是否直接引用目標流程
+  if (workflow.referencedWorkflows) {
+    for (const refId of workflow.referencedWorkflows) {
+      if (targetWorkflowIds.includes(refId)) {
+        return true; // 直接循環
+      }
+      // 遞歸檢查子流程
+      if (checkCircularReference(refId, targetWorkflowIds, new Set(visited))) {
+        return true;
+      }
+    }
+  }
+  
+  // 檢查existing-workflow節點
+  if (workflow.nodes) {
+    for (const node of workflow.nodes) {
+      if ((node.data.type === 'workflow-reference' || node.data.type === 'existing-workflow') && node.data.workflowId) {
+        if (targetWorkflowIds.includes(node.data.workflowId)) {
+          return true; // 直接循環
+        }
+        // 遞歸檢查
+        if (checkCircularReference(node.data.workflowId, targetWorkflowIds, new Set(visited))) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
+}
+
+// 組合多個工作流程（使用引用方式）
 app.post('/api/workflows/combine', (req, res) => {
   const { name, workflowIds } = req.body;
   
@@ -798,47 +1050,58 @@ app.post('/api/workflows/combine', (req, res) => {
   }
   
   try {
+    // 檢查循環引用
+    for (const workflowId of workflowIds) {
+      if (checkCircularReference(workflowId, workflowIds)) {
+        return res.status(400).json({ 
+          error: `檢測到循環引用：流程 ${workflowMetadata[workflowId]?.name || workflowId} 會導致無窮迴圈` 
+        });
+      }
+    }
     const combinedNodes = [];
     const combinedEdges = [];
-    let nodeIdOffset = 0;
-    const nodeIdMapping = {}; // 舊ID -> 新ID的映射
     
-    // 合併所有選中的工作流程
+    // 為每個選中的工作流程創建一個引用節點
     workflowIds.forEach((workflowId, index) => {
       const workflow = workflows[workflowId];
-      if (!workflow) {
+      const metadata = workflowMetadata[workflowId];
+      
+      if (!workflow || !metadata) {
         throw new Error(`工作流程 ${workflowId} 不存在`);
       }
       
-      // 為每個工作流程建立獨立的ID映射
-      const currentMapping = {};
+      // 創建流程引用節點
+      const refNodeId = `workflow-ref-${workflowId}`;
+      combinedNodes.push({
+        id: refNodeId,
+        type: 'default',
+        position: {
+          x: 100 + (index * 300), // 水平排列
+          y: 150
+        },
+        data: {
+          type: 'workflow-reference',
+          label: `📋 ${metadata.name}`,
+          workflowId: workflowId,
+          workflowName: metadata.name,
+          nodeCount: metadata.nodeCount
+        },
+        className: 'node-workflow-reference',
+        sourcePosition: 'right',
+        targetPosition: 'left'
+      });
       
-      // 處理節點
-      if (workflow.nodes) {
-        workflow.nodes.forEach(node => {
-          const newNodeId = `${node.id}_combined_${index}`;
-          currentMapping[node.id] = newNodeId;
-          
-          combinedNodes.push({
-            ...node,
-            id: newNodeId,
-            position: {
-              x: node.position.x + (index * 400), // 水平排列不同流程
-              y: node.position.y
-            }
-          });
-        });
-      }
-      
-      // 處理邊
-      if (workflow.edges) {
-        workflow.edges.forEach(edge => {
-          combinedEdges.push({
-            ...edge,
-            id: `${edge.id}_combined_${index}`,
-            source: currentMapping[edge.source] || edge.source,
-            target: currentMapping[edge.target] || edge.target
-          });
+      // 如果不是第一個節點，創建連接邊
+      if (index > 0) {
+        const prevNodeId = `workflow-ref-${workflowIds[index - 1]}`;
+        combinedEdges.push({
+          id: `edge-${prevNodeId}-${refNodeId}`,
+          source: prevNodeId,
+          target: refNodeId,
+          type: 'smoothstep',
+          animated: true,
+          style: { stroke: '#4CAF50', strokeWidth: 3 },
+          data: { active: true }
         });
       }
     });
@@ -848,20 +1111,30 @@ app.post('/api/workflows/combine', (req, res) => {
     const combinedWorkflow = {
       nodes: combinedNodes,
       edges: combinedEdges,
-      nodeGroups: {}
+      nodeGroups: {},
+      isComposed: true, // 標記為組合流程
+      referencedWorkflows: workflowIds // 記錄引用的流程ID
     };
     
     const combinedMetadata = {
       id: workflowId,
       name,
-      description: `組合自 ${workflowIds.length} 個流程`,
+      description: `組合自 ${workflowIds.length} 個流程: ${workflowIds.map(id => workflowMetadata[id]?.name || id).join(', ')}`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      nodeCount: combinedNodes.length
+      nodeCount: combinedNodes.length,
+      isComposed: true,
+      referencedWorkflows: workflowIds
     };
     
     workflows[workflowId] = combinedWorkflow;
     workflowMetadata[workflowId] = combinedMetadata;
+    
+    console.log(`🔧 創建組合流程 ${workflowId}:`, {
+      isComposed: combinedWorkflow.isComposed,
+      referencedWorkflows: combinedWorkflow.referencedWorkflows,
+      nodeCount: combinedNodes.length
+    });
     saveData(WORKFLOWS_FILE, workflows);
     saveData(METADATA_FILE, workflowMetadata);
     
@@ -1015,94 +1288,150 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
             context._usedReplyTokens = {};
           }
           
-          // 找到所有 webhook-trigger 節點，每個都是獨立的流程起點
-          const triggerNodes = workflow.nodes.filter(n => n.data.type === 'webhook-trigger');
+          // 檢查是否為組合流程
+          console.log(`🔍 檢查流程類型 - isComposed: ${workflow.isComposed}, referencedWorkflows: ${JSON.stringify(workflow.referencedWorkflows)}`);
           
-          for (const triggerNode of triggerNodes) {
-            console.log(`🔧 執行獨立流程起點: ${triggerNode.id} (${triggerNode.data.type})`);
-            const result = await executeNode(triggerNode, context);
-            results.push({ nodeId: triggerNode.id, result });
-            context[triggerNode.id] = result.data;
-            context._lastResult = result;
+          // 臨時修復：檢查是否為組合流程（根據節點類型判斷）
+          const isComposedWorkflow = workflow.isComposed || workflow.nodes.some(n => n.data.type === 'workflow-reference');
+          console.log(`🔍 重新檢查 - 是否為組合流程: ${isComposedWorkflow}`);
+          
+          if (isComposedWorkflow) {
+            console.log(`🔗 執行組合流程: ${workflowId}`);
             
-            // 找到這個 trigger 連接的條件節點（只考慮啟用的邊）
-            const connectedConditionEdges = workflow.edges.filter(edge => 
-              edge.source === triggerNode.id && 
-              edge.data?.active !== false &&
-              workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
-            );
+            // 檢查組合流程中的子流程是否有webhook-trigger
+            let hasWebhookTrigger = false;
+            console.log(`🔍 檢查引用的流程:`, workflow.referencedWorkflows);
             
-            let conditionMatched = false;
-            let replyTokenUsed = false;
-            
-            // 執行連接到這個 trigger 的條件節點
-            for (const edge of connectedConditionEdges) {
-              const conditionNode = workflow.nodes.find(n => n.id === edge.target);
-              if (conditionNode) {
-                console.log(`🔧 執行條件節點: ${conditionNode.id} (${conditionNode.data.type})`);
-                const conditionResult = await executeNode(conditionNode, context);
-                results.push({ nodeId: conditionNode.id, result: conditionResult });
-                context[conditionNode.id] = conditionResult.data;
-                context._lastResult = conditionResult;
-                
-                // 如果條件為 true，執行所有連接的節點（只考慮啟用的邊）
-                if (conditionResult.data) {
-                  const actionEdges = workflow.edges.filter(e => e.source === conditionNode.id && e.data?.active !== false);
-                  for (const actionEdge of actionEdges) {
-                    const actionNode = workflow.nodes.find(n => n.id === actionEdge.target);
-                    if (actionNode) {
-                      console.log(`✅ 條件為 true，執行連接的節點: ${actionNode.id}`);
-                      
-
-                      
-                      const actionResult = await executeNode(actionNode, context);
-                      results.push({ nodeId: actionNode.id, result: actionResult });
-                      
-                      if (actionResult.success) {
-                        context[actionNode.id] = actionResult.data;
-                        context._lastResult = actionResult;
-                        
-                        // 如果是 LINE reply 或 carousel 且成功，標記 replyToken 已使用
-                        if ((actionNode.data.type === 'line-reply' || actionNode.data.type === 'line-carousel') && 
-                            actionResult.data && actionResult.data.mode !== 'push') {
-                          replyTokenUsed = true;
-                        }
-                      }
-                    }
-                  }
-                  
-                  if (actionEdges.length > 0) {
-                    conditionMatched = true;
-                  }
-                }
-              }
-            }
-            
-            // 如果沒有條件匹配，執行直接連接到 trigger 的預設節點（只考慮啟用的邊）
-            if (!conditionMatched) {
-              const defaultEdges = workflow.edges.filter(edge => 
-                edge.source === triggerNode.id && 
-                edge.data?.active !== false &&
-                !workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
-              );
+            for (const refWorkflowId of workflow.referencedWorkflows || []) {
+              const refWorkflow = workflows[refWorkflowId];
+              console.log(`🔍 檢查流程 ${refWorkflowId}:`, refWorkflow ? '存在' : '不存在');
               
-              for (const edge of defaultEdges) {
-                const defaultNode = workflow.nodes.find(n => n.id === edge.target);
-                if (defaultNode) {
-                  console.log(`💬 執行預設節點: ${defaultNode.id}`);
-                  const defaultResult = await executeNode(defaultNode, context);
-                  results.push({ nodeId: defaultNode.id, result: defaultResult });
-                  
-                  if (defaultResult.success) {
-                    context[defaultNode.id] = defaultResult.data;
-                    context._lastResult = defaultResult;
-                  }
+              if (refWorkflow) {
+                const triggerNodes = refWorkflow.nodes.filter(n => n.data.type === 'webhook-trigger');
+                console.log(`🔍 流程 ${refWorkflowId} 的webhook-trigger節點:`, triggerNodes.length);
+                
+                if (triggerNodes.length > 0) {
+                  hasWebhookTrigger = true;
+                  console.log(`✅ 找到webhook-trigger節點在流程 ${refWorkflowId}`);
                   break;
                 }
               }
             }
             
-            // 繼續檢查下一個 trigger（每個 trigger 都是獨立的流程）
+            console.log(`🔍 組合流程是否有webhook-trigger: ${hasWebhookTrigger}`);
+            
+            // 無論是否有webhook-trigger，都執行組合流程（因為LINE Webhook已經觸發）
+            console.log(`🚀 開始執行組合流程的所有引用節點`);
+            console.log(`📋 組合流程節點數量: ${workflow.nodes.length}`);
+            
+            for (const node of workflow.nodes) {
+              if (node.data.type === 'workflow-reference') {
+                console.log(`📋 執行引用流程: ${node.data.workflowName}`);
+                const result = await executeNode(node, context);
+                results.push({ nodeId: node.id, result });
+                
+                if (result.success) {
+                  context[node.id] = result.data;
+                  context._lastResult = result;
+                  // 將子流程的最終結果作為下一個流程的輸入
+                  if (result.data.finalResult) {
+                    context._lastResult = result.data.finalResult;
+                  }
+                } else {
+                  context._lastResult = result;
+                  break;
+                }
+              }
+            }
+          } else {
+            console.log(`🔗 執行一般流程: ${workflowId}`);
+            // 一般流程執行邏輯
+            // 找到所有 webhook-trigger 節點，每個都是獨立的流程起點
+            const triggerNodes = workflow.nodes.filter(n => n.data.type === 'webhook-trigger');
+            console.log(`🔍 找到 ${triggerNodes.length} 個webhook-trigger節點`);
+            
+            for (const triggerNode of triggerNodes) {
+              console.log(`🔧 執行獨立流程起點: ${triggerNode.id} (${triggerNode.data.type})`);
+              const result = await executeNode(triggerNode, context);
+              results.push({ nodeId: triggerNode.id, result });
+              context[triggerNode.id] = result.data;
+              context._lastResult = result;
+              
+              // 找到這個 trigger 連接的條件節點（只考慮啟用的邊）
+              const connectedConditionEdges = workflow.edges.filter(edge => 
+                edge.source === triggerNode.id && 
+                edge.data?.active !== false &&
+                workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+              );
+              
+              let conditionMatched = false;
+              let replyTokenUsed = false;
+              
+              // 執行連接到這個 trigger 的條件節點
+              for (const edge of connectedConditionEdges) {
+                const conditionNode = workflow.nodes.find(n => n.id === edge.target);
+                if (conditionNode) {
+                  console.log(`🔧 執行條件節點: ${conditionNode.id} (${conditionNode.data.type})`);
+                  const conditionResult = await executeNode(conditionNode, context);
+                  results.push({ nodeId: conditionNode.id, result: conditionResult });
+                  context[conditionNode.id] = conditionResult.data;
+                  context._lastResult = conditionResult;
+                  
+                  // 如果條件為 true，執行所有連接的節點（只考慮啟用的邊）
+                  if (conditionResult.data) {
+                    const actionEdges = workflow.edges.filter(e => e.source === conditionNode.id && e.data?.active !== false);
+                    for (const actionEdge of actionEdges) {
+                      const actionNode = workflow.nodes.find(n => n.id === actionEdge.target);
+                      if (actionNode) {
+                        console.log(`✅ 條件為 true，執行連接的節點: ${actionNode.id}`);
+                        
+                        const actionResult = await executeNode(actionNode, context);
+                        results.push({ nodeId: actionNode.id, result: actionResult });
+                        
+                        if (actionResult.success) {
+                          context[actionNode.id] = actionResult.data;
+                          context._lastResult = actionResult;
+                          
+                          // 如果是 LINE reply 或 carousel 且成功，標記 replyToken 已使用
+                          if ((actionNode.data.type === 'line-reply' || actionNode.data.type === 'line-carousel') && 
+                              actionResult.data && actionResult.data.mode !== 'push') {
+                            replyTokenUsed = true;
+                          }
+                        }
+                      }
+                    }
+                    
+                    if (actionEdges.length > 0) {
+                      conditionMatched = true;
+                    }
+                  }
+                }
+              }
+              
+              // 如果沒有條件匹配，執行直接連接到 trigger 的預設節點（只考慮啟用的邊）
+              if (!conditionMatched) {
+                const defaultEdges = workflow.edges.filter(edge => 
+                  edge.source === triggerNode.id && 
+                  edge.data?.active !== false &&
+                  !workflow.nodes.find(n => n.id === edge.target && n.data.type === 'condition')
+                );
+                
+                for (const edge of defaultEdges) {
+                  const defaultNode = workflow.nodes.find(n => n.id === edge.target);
+                  if (defaultNode) {
+                    console.log(`💬 執行預設節點: ${defaultNode.id}`);
+                    const defaultResult = await executeNode(defaultNode, context);
+                    results.push({ nodeId: defaultNode.id, result: defaultResult });
+                    
+                    if (defaultResult.success) {
+                      context[defaultNode.id] = defaultResult.data;
+                      context._lastResult = defaultResult;
+                    }
+                    break;
+                  }
+                }
+              }
+            }
           }
           
           console.log('🚀 LINE Webhook觸發工作流程執行完成', results);
