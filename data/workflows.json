@@ -1672,7 +1672,7 @@
         "targetPosition": "left",
         "width": 150,
         "height": 41,
-        "selected": false,
+        "selected": true,
         "positionAbsolute": {
           "x": 362.3857844862471,
           "y": 285.62029438023194
@@ -1763,7 +1763,7 @@
         "targetPosition": "left",
         "width": 220,
         "height": 43,
-        "selected": false,
+        "selected": true,
         "dragging": false,
         "positionAbsolute": {
           "x": 326,
