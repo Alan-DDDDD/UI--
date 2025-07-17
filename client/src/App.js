@@ -19,6 +19,8 @@ import SmartHints from './SmartHints';
 import QuickActions from './QuickActions';
 import Notification from './Notification';
 import WebhookUrlDialog from './WebhookUrlDialog';
+import ExecutionResults from './ExecutionResults';
+import ExecuteDialog from './ExecuteDialog';
 
 import './App.css';
 
@@ -66,6 +68,9 @@ function FlowWrapper() {
   const [showHintsPrompt, setShowHintsPrompt] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showWebhookUrl, setShowWebhookUrl] = useState(false);
+  const [executionResults, setExecutionResults] = useState(null);
+  const [showExecutionResults, setShowExecutionResults] = useState(false);
+  const [showExecuteDialog, setShowExecuteDialog] = useState(false);
 
   // 通知系統
   const showNotification = (type, title, message = '') => {
@@ -73,10 +78,10 @@ function FlowWrapper() {
     const notification = { id, type, title, message };
     setNotifications(prev => [...prev, notification]);
     
-    // 自動移除通知
+    // 自動移除通知 - 錯誤訊息顯示更久
     setTimeout(() => {
       removeNotification(id);
-    }, type === 'error' ? 6000 : 4000);
+    }, type === 'error' ? 10000 : 4000);
   };
 
   const removeNotification = (id) => {
@@ -113,7 +118,15 @@ function FlowWrapper() {
 
   const handleNodesChange = useCallback((changes) => {
     onNodesChange(changes);
-    setHasUnsavedChanges(true);
+    // 只有在用戶主動操作時才標記為未儲存，排除初始化和載入時的變更
+    const isUserAction = changes.some(change => 
+      change.type === 'position' || 
+      change.type === 'remove' || 
+      (change.type === 'add' && change.item)
+    );
+    if (isUserAction) {
+      setHasUnsavedChanges(true);
+    }
   }, [onNodesChange]);
 
   const onConnect = useCallback((params) => {
@@ -515,7 +528,7 @@ function FlowWrapper() {
     }
   };
 
-  const handleExecuteWorkflow = async () => {
+  const handleExecuteWorkflow = async (inputData = {}) => {
     if (!workflowId) {
       showNotification('warning', '請先儲存流程');
       return;
@@ -526,11 +539,24 @@ function FlowWrapper() {
       const response = await fetch(`http://localhost:3001/api/execute/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputData: {} })
+        body: JSON.stringify({ inputData })
       });
       const result = await response.json();
       
-      if (result.success) {
+      console.log('執行結果:', result);
+      
+      // 儲存執行結果並顯示結果視窗
+      if (result.results && result.results.length > 0) {
+        setExecutionResults(result.results);
+        setShowExecutionResults(true);
+        
+        const failedSteps = result.results.filter(r => !r.result.success);
+        if (failedSteps.length > 0) {
+          showNotification('error', `流程執行完成 (${failedSteps.length}/${result.results.length} 步驟失敗)`);
+        } else {
+          showNotification('success', `流程執行成功 (${result.results.length} 步驟完成)`);
+        }
+      } else if (result.success) {
         showNotification('success', '流程執行成功');
       } else {
         showNotification('error', '流程執行失敗', result.error || '未知錯誤');
@@ -589,8 +615,18 @@ function FlowWrapper() {
 
   const handleSelectWorkflow = async (selectedWorkflowId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/workflows/${selectedWorkflowId}`);
-      const workflow = await response.json();
+      // 同時獲取流程數據和元數據
+      const [workflowResponse, metadataResponse] = await Promise.all([
+        fetch(`http://localhost:3001/api/workflows/${selectedWorkflowId}`),
+        fetch('http://localhost:3001/api/workflows')
+      ]);
+      
+      const workflow = await workflowResponse.json();
+      const metadataList = await metadataResponse.json();
+      
+      // 從元數據中找到對應的流程名稱
+      const workflowMetadata = metadataList.workflows.find(w => w.id === selectedWorkflowId);
+      const workflowName = workflowMetadata?.name || workflow.name || '流程';
       
       // 為現有節點添加className和連接點位置
       const nodesWithType = (workflow.nodes || []).map(node => ({
@@ -606,8 +642,9 @@ function FlowWrapper() {
       setInputParams(workflow.inputParams || []);
       setOutputParams(workflow.outputParams || []);
       setWorkflowId(selectedWorkflowId);
-      setCurrentWorkflowName(workflow.name || '流程');
-      setHasUnsavedChanges(false);
+      setCurrentWorkflowName(workflowName);
+      // 延遲設置以確保所有狀態更新完成後再重置未儲存標記
+      setTimeout(() => setHasUnsavedChanges(false), 100);
     } catch (error) {
       console.error('載入流程失敗:', error);
       showNotification('error', '載入流程失敗', error.message);
@@ -707,7 +744,13 @@ function FlowWrapper() {
         {/* 快速操作工具列 */}
         <QuickActions
           onSaveWorkflow={handleSaveWorkflow}
-          onExecuteWorkflow={handleExecuteWorkflow}
+          onExecuteWorkflow={() => {
+            if (inputParams.length > 0) {
+              setShowExecuteDialog(true);
+            } else {
+              handleExecuteWorkflow();
+            }
+          }}
           onValidateWorkflow={handleValidateWorkflow}
           hasUnsavedChanges={hasUnsavedChanges}
           isExecuting={isExecuting}
@@ -833,6 +876,20 @@ function FlowWrapper() {
           isOpen={showWebhookUrl}
           onClose={() => setShowWebhookUrl(false)}
           workflowId={workflowId}
+        />
+        
+        <ExecutionResults
+          isOpen={showExecutionResults}
+          onClose={() => setShowExecutionResults(false)}
+          results={executionResults}
+          nodes={nodes}
+        />
+        
+        <ExecuteDialog
+          isOpen={showExecuteDialog}
+          onClose={() => setShowExecuteDialog(false)}
+          onExecute={handleExecuteWorkflow}
+          inputParams={inputParams}
         />
       </div>
     </div>

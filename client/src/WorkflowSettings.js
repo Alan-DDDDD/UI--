@@ -13,6 +13,11 @@ function WorkflowSettings({
   const [activeTab, setActiveTab] = useState('basic');
   const [localWorkflowName, setLocalWorkflowName] = useState(workflowName);
 
+  // 當workflowName變更時同步更新localWorkflowName
+  React.useEffect(() => {
+    setLocalWorkflowName(workflowName);
+  }, [workflowName]);
+
   if (!isOpen) return null;
 
   const addInputParam = () => {

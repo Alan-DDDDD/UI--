@@ -918,12 +918,20 @@ app.post('/api/execute/:workflowId', async (req, res) => {
           context._lastResult = result;
         } else {
           context._lastResult = result;
-          break;
+          // 當有節點失敗時，整個流程應該標記為失敗
+          return res.json({ success: false, results, finalContext: context, error: result.error });
         }
       }
     }
     
-    res.json({ success: true, results, finalContext: context });
+    // 檢查是否有任何節點失敗
+    const hasFailedNode = results.some(r => !r.result.success);
+    res.json({ 
+      success: !hasFailedNode, 
+      results, 
+      finalContext: context,
+      error: hasFailedNode ? '流程執行中有節點失敗' : undefined
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1542,6 +1550,10 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                               actionResult.data && actionResult.data.mode !== 'push') {
                             replyTokenUsed = true;
                           }
+                        } else {
+                          // 節點執行失敗時，記錄錯誤並停止執行
+                          console.log(`❌ 節點 ${actionNode.id} 執行失敗: ${actionResult.error}`);
+                          context._lastResult = actionResult;
                         }
                       }
                     }
@@ -1570,6 +1582,10 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                     
                     if (defaultResult.success) {
                       context[defaultNode.id] = defaultResult.data;
+                      context._lastResult = defaultResult;
+                    } else {
+                      // 節點執行失敗時，記錄錯誤
+                      console.log(`❌ 預設節點 ${defaultNode.id} 執行失敗: ${defaultResult.error}`);
                       context._lastResult = defaultResult;
                     }
                     break;
