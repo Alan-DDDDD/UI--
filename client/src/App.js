@@ -15,6 +15,8 @@ import NodeEditor from './NodeEditor';
 import WindowManager from './WindowManager';
 import WorkflowSettings from './WorkflowSettings';
 import UserManual from './UserManual';
+import SmartHints from './SmartHints';
+import QuickActions from './QuickActions';
 
 import './App.css';
 
@@ -54,6 +56,7 @@ function FlowWrapper() {
   const [outputParams, setOutputParams] = useState([]);
   const [showWorkflowSettings, setShowWorkflowSettings] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
   const { project } = useReactFlow();
 
   const handleParamsChange = (newInputParams, newOutputParams) => {
@@ -428,6 +431,116 @@ function FlowWrapper() {
     setHasUnsavedChanges(true);
   };
 
+  const handleSaveWorkflow = async () => {
+    try {
+      if (workflowId) {
+        await fetch(`http://localhost:3001/api/workflows/${workflowId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            name: currentWorkflowName,
+            nodes, 
+            edges, 
+            nodeGroups, 
+            inputParams, 
+            outputParams 
+          })
+        });
+      } else {
+        const response = await fetch('http://localhost:3001/api/workflows', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            name: currentWorkflowName, 
+            nodes, 
+            edges, 
+            nodeGroups, 
+            inputParams, 
+            outputParams 
+          })
+        });
+        const data = await response.json();
+        setWorkflowId(data.workflowId);
+      }
+      setHasUnsavedChanges(false);
+      alert('流程已儲存');
+    } catch (error) {
+      alert('儲存失敗: ' + error.message);
+    }
+  };
+
+  const handleExecuteWorkflow = async () => {
+    if (!workflowId) {
+      alert('請先儲存流程');
+      return;
+    }
+    
+    setIsExecuting(true);
+    try {
+      const response = await fetch(`http://localhost:3001/api/execute/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inputData: {} })
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('流程執行成功');
+      } else {
+        alert('流程執行失敗: ' + (result.error || '未知錯誤'));
+      }
+    } catch (error) {
+      alert('執行失敗: ' + error.message);
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  const handleValidateWorkflow = () => {
+    const issues = [];
+    
+    // 檢查是否有節點
+    if (nodes.length === 0) {
+      issues.push('流程中沒有任何節點');
+    }
+    
+    // 檢查孤立節點
+    const isolatedNodes = nodes.filter(node => {
+      const hasIncoming = edges.some(edge => edge.target === node.id);
+      const hasOutgoing = edges.some(edge => edge.source === node.id);
+      return !hasIncoming && !hasOutgoing && node.data.type !== 'webhook-trigger' && node.data.type !== 'program-entry';
+    });
+    
+    if (isolatedNodes.length > 0) {
+      issues.push(`發現 ${isolatedNodes.length} 個孤立節點`);
+    }
+    
+    // 檢查必填欄位
+    const incompleteNodes = nodes.filter(node => {
+      switch (node.data.type) {
+        case 'http-request':
+          return !node.data.url;
+        case 'condition':
+          return !node.data.field || !node.data.operator;
+        case 'line-reply':
+        case 'line-push':
+          return !node.data.body?.messages?.[0]?.text;
+        default:
+          return false;
+      }
+    });
+    
+    if (incompleteNodes.length > 0) {
+      issues.push(`發現 ${incompleteNodes.length} 個配置不完整的節點`);
+    }
+    
+    if (issues.length === 0) {
+      alert('✅ 流程驗證通過，沒有發現問題');
+    } else {
+      alert('⚠️ 發現以下問題:\n' + issues.join('\n'));
+    }
+  };
+
   const handleSelectWorkflow = async (selectedWorkflowId) => {
     try {
       const response = await fetch(`http://localhost:3001/api/workflows/${selectedWorkflowId}`);
@@ -543,6 +656,15 @@ function FlowWrapper() {
         )}
         
         {/* 流程設定按鈕 */}
+        {/* 快速操作工具列 */}
+        <QuickActions
+          onSaveWorkflow={handleSaveWorkflow}
+          onExecuteWorkflow={handleExecuteWorkflow}
+          onValidateWorkflow={handleValidateWorkflow}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isExecuting={isExecuting}
+        />
+        
         <div className="workflow-settings-btn">
           <button 
             onClick={() => setShowWorkflowSettings(true)}
@@ -559,6 +681,12 @@ function FlowWrapper() {
             📖
           </button>
         </div>
+        
+        {/* 智能提示面板 */}
+        <SmartHints
+          nodes={nodes}
+          selectedNode={selectedNode}
+        />
         {/* 群組功能暫時取消
         {selectedNodes.length > 1 && (
           <div className="group-controls">

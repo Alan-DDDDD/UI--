@@ -1,0 +1,142 @@
+/* 快速操作工具列樣式 */
+.quick-actions-toolbar {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #2d2d2d;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.quick-action-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #333;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-action-item:hover {
+  background: #404040;
+  border-color: #555;
+  transform: translateY(-1px);
+}
+
+.quick-action-item.highlight {
+  background: #4CAF50;
+  border-color: #66BB6A;
+  animation: pulse 2s infinite;
+}
+
+.quick-action-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.action-icon {
+  font-size: 16px;
+}
+
+.action-tooltip {
+  position: absolute;
+  bottom: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a;
+  color: #e0e0e0;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 1001;
+}
+
+.action-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 4px solid #1a1a1a;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tooltip-shortcut {
+  color: #999;
+  font-size: 11px;
+}
+
+.execution-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: #e0e0e0;
+  font-size: 12px;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #404040;
+  border-top: 2px solid #4CAF50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 動畫效果 */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .quick-actions-toolbar {
+    left: 10px;
+    right: 10px;
+    transform: none;
+    justify-content: center;
+  }
+  
+  .action-tooltip {
+    bottom: -35px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}

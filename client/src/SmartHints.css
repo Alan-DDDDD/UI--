@@ -1,0 +1,152 @@
+/* 智能提示面板樣式 */
+.smart-hints-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
+  background: #2d2d2d;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.hints-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #333;
+  border-bottom: 1px solid #404040;
+}
+
+.hints-header h4 {
+  margin: 0;
+  color: #e0e0e0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hints-close-btn {
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.hints-close-btn:hover {
+  background: #404040;
+  color: #e0e0e0;
+}
+
+.hints-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: #333;
+  border-radius: 6px;
+  border-left: 4px solid #2196F3;
+  transition: all 0.2s;
+}
+
+.hint-item:hover {
+  background: #383838;
+}
+
+.hint-item.hint-warning {
+  border-left-color: #FF9800;
+}
+
+.hint-item.hint-error {
+  border-left-color: #dc3545;
+}
+
+.hint-item.hint-success {
+  border-left-color: #4CAF50;
+}
+
+.hint-icon {
+  font-size: 16px;
+  margin-top: 2px;
+}
+
+.hint-content {
+  flex: 1;
+}
+
+.hint-title {
+  color: #e0e0e0;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.hint-message {
+  color: #b0b0b0;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.hint-actions {
+  margin-top: 8px;
+}
+
+.hint-action-btn {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hint-action-btn:hover {
+  background: #1976D2;
+}
+
+.hints-footer {
+  padding: 8px 16px;
+  background: #333;
+  border-top: 1px solid #404040;
+  text-align: center;
+}
+
+.hints-footer small {
+  color: #888;
+  font-size: 11px;
+}
+
+/* 滾動條樣式 */
+.hints-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hints-list::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.hints-list::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.hints-list::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}

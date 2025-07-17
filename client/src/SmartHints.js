@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './SmartHints.css';
 
 function SmartHints({ nodes, selectedNode }) {
   const [hints, setHints] = useState([]);
@@ -10,6 +11,58 @@ function SmartHints({ nodes, selectedNode }) {
 
   const generateHints = () => {
     const newHints = [];
+
+    // 檢查流程完整性
+    if (nodes.length === 0) {
+      newHints.push({
+        type: 'info',
+        title: '開始建立流程',
+        message: '從左側面板拖拽節點到畫布上開始建立您的流程',
+        action: 'get-started'
+      });
+      setHints(newHints);
+      setShowHints(true);
+      return;
+    }
+
+    // 檢查是否有起始節點
+    const hasStartNode = nodes.some(n => 
+      n.data.type === 'webhook-trigger' || n.data.type === 'program-entry'
+    );
+    if (!hasStartNode) {
+      newHints.push({
+        type: 'warning',
+        title: '缺少起始節點',
+        message: '建議添加 Webhook觸發 或 程式進入點 作為流程的起始節點',
+        action: 'add-start-node'
+      });
+    }
+
+    // 檢查配置不完整的節點
+    const incompleteNodes = nodes.filter(node => {
+      switch (node.data.type) {
+        case 'http-request':
+          return !node.data.url || !node.data.method;
+        case 'condition':
+          return !node.data.field || !node.data.operator || node.data.value === undefined;
+        case 'line-reply':
+        case 'line-push':
+          return !node.data.body?.messages?.[0]?.text;
+        case 'data-map':
+          return !node.data.mappings || node.data.mappings.length === 0;
+        default:
+          return false;
+      }
+    });
+
+    if (incompleteNodes.length > 0) {
+      newHints.push({
+        type: 'warning',
+        title: '配置不完整',
+        message: `發現 ${incompleteNodes.length} 個節點配置不完整，請檢查必填欄位`,
+        action: 'check-config'
+      });
+    }
 
     // 檢查是否有existing-workflow節點但沒有參數映射
     const workflowRefNodes = nodes.filter(n => 
@@ -28,13 +81,16 @@ function SmartHints({ nodes, selectedNode }) {
       }
     });
 
-    // 檢查是否有孤立的節點
+    // 檢查孤立節點（更準確的檢查）
     const isolatedNodes = nodes.filter(node => {
-      const hasIncoming = nodes.some(n => 
-        n.data.edges && n.data.edges.some(e => e.target === node.id)
-      );
-      const hasOutgoing = node.data.edges && node.data.edges.length > 0;
-      return !hasIncoming && !hasOutgoing && node.data.type !== 'webhook-trigger';
+      // 檢查是否有連入的邊
+      const hasIncoming = selectedNode?.edges?.some(edge => edge.target === node.id) || false;
+      // 檢查是否有連出的邊  
+      const hasOutgoing = selectedNode?.edges?.some(edge => edge.source === node.id) || false;
+      // 起始節點不算孤立
+      const isStartNode = node.data.type === 'webhook-trigger' || node.data.type === 'program-entry';
+      
+      return !hasIncoming && !hasOutgoing && !isStartNode;
     });
 
     if (isolatedNodes.length > 0) {
@@ -46,18 +102,47 @@ function SmartHints({ nodes, selectedNode }) {
       });
     }
 
-    // 檢查是否有循環引用的可能
-    workflowRefNodes.forEach(node => {
-      if (node.data.workflowId) {
+    // 檢查 LINE 節點的 Token 配置
+    const lineNodes = nodes.filter(n => 
+      n.data.type === 'line-reply' || n.data.type === 'line-push' || n.data.type === 'line-carousel'
+    );
+    
+    lineNodes.forEach(node => {
+      const authHeader = node.data.headers?.Authorization;
+      if (!authHeader || authHeader === 'Bearer ' || authHeader.length < 20) {
         newHints.push({
-          type: 'info',
-          title: '最佳實踐',
-          message: `使用子流程時建議設定清楚的輸入輸出參數，提高流程的可維護性`,
+          type: 'warning',
+          title: 'LINE Token 設定',
+          message: `節點 "${node.data.label}" 的 LINE Token 可能未正確設定`,
           nodeId: node.id,
-          action: 'best-practice'
+          action: 'configure-token'
         });
       }
     });
+
+    // 效能建議
+    if (nodes.length > 10) {
+      newHints.push({
+        type: 'info',
+        title: '效能建議',
+        message: '流程節點較多，建議考慮使用子流程來組織複雜的邏輯',
+        action: 'optimize-performance'
+      });
+    }
+
+    // 最佳實踐建議
+    const httpNodes = nodes.filter(n => n.data.type === 'http-request');
+    if (httpNodes.length > 0) {
+      const hasErrorHandling = nodes.some(n => n.data.type === 'condition');
+      if (!hasErrorHandling) {
+        newHints.push({
+          type: 'info',
+          title: '錯誤處理建議',
+          message: '建議添加條件判斷節點來處理 API 呼叫可能的錯誤情況',
+          action: 'add-error-handling'
+        });
+      }
+    }
 
     setHints(newHints);
     setShowHints(newHints.length > 0);
@@ -133,23 +218,39 @@ function SmartHints({ nodes, selectedNode }) {
 
   function handleHintAction(hint) {
     switch (hint.action) {
+      case 'get-started':
+        alert('🚀 歡迎使用 FlowBuilder！\n\n1. 從左側面板拖拽節點到畫布上\n2. 點擊節點進行配置\n3. 拖拽連接點建立流程');
+        break;
+      case 'add-start-node':
+        alert('🏁 建議添加起始節點：\n\n• Webhook觸發：接收外部請求\n• 程式進入點：手動觸發流程');
+        break;
+      case 'check-config':
+        alert('⚙️ 請檢查以下配置：\n\n• HTTP請求：URL 和方法\n• 條件判斷：欄位、運算子、值\n• LINE節點：訊息內容\n• 資料映射：映射規則');
+        break;
       case 'configure-params':
-        // 觸發參數配置
         if (hint.nodeId) {
           const node = nodes.find(n => n.id === hint.nodeId);
           if (node) {
-            // 這裡可以觸發節點編輯器打開
-            console.log('打開節點編輯器:', node);
+            alert(`🔧 請配置節點 "${node.data.label}" 的參數映射：\n\n1. 點擊節點打開編輯器\n2. 設定輸入參數映射\n3. 配置輸出參數`);
           }
         }
         break;
       case 'connect-nodes':
-        // 提示用戶連接節點
-        alert('請拖拽節點之間的連接點來建立流程連接');
+        alert('🔗 連接節點步驟：\n\n1. 將滑鼠移到節點邊緣\n2. 出現連接點時拖拽到目標節點\n3. 釋放完成連接');
+        break;
+      case 'configure-token':
+        if (hint.nodeId) {
+          alert('🔑 LINE Token 設定：\n\n1. 點擊節點打開編輯器\n2. 在 Authorization 欄位輸入 "Bearer YOUR_TOKEN"\n3. 或使用 Token 管理器統一管理');
+        }
+        break;
+      case 'add-error-handling':
+        alert('⚠️ 錯誤處理建議：\n\n1. 添加條件判斷節點\n2. 檢查 API 回應狀態\n3. 設定錯誤處理流程');
+        break;
+      case 'optimize-performance':
+        alert('🚀 效能優化建議：\n\n1. 將相關節點組成子流程\n2. 使用現有流程節點引用\n3. 減少不必要的節點');
         break;
       case 'best-practice':
-        // 顯示最佳實踐提示
-        alert('建議在子流程中明確定義輸入輸出參數，並使用描述性的參數名稱');
+        alert('🌟 最佳實踐：\n\n1. 使用有意義的節點名稱\n2. 添加詳細的描述\n3. 定義清晰的輸入輸出參數');
         break;
       default:
         break;
@@ -158,8 +259,14 @@ function SmartHints({ nodes, selectedNode }) {
 
   function getActionText(action) {
     switch (action) {
+      case 'get-started': return '開始使用';
+      case 'add-start-node': return '添加起始節點';
+      case 'check-config': return '檢查配置';
       case 'configure-params': return '配置參數';
       case 'connect-nodes': return '了解連接';
+      case 'configure-token': return '設定 Token';
+      case 'add-error-handling': return '添加錯誤處理';
+      case 'optimize-performance': return '優化效能';
       case 'best-practice': return '查看建議';
       default: return '處理';
     }
