@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-function WorkflowStatus({ nodes, edges, workflowId, hasUnsavedChanges }) {
+function WorkflowStatus({ nodes, edges, workflowId, hasUnsavedChanges, mode = 'embedded' }) {
+  const [isMinimized, setIsMinimized] = useState(false);
   const [status, setStatus] = useState({
     health: 'unknown',
     issues: [],
@@ -67,13 +68,43 @@ function WorkflowStatus({ nodes, edges, workflowId, hasUnsavedChanges }) {
 
     // 檢查是否有起始節點
     const hasWebhookTrigger = nodes.some(n => n.data.type === 'webhook-trigger');
-    if (!hasWebhookTrigger && nodes.length > 0) {
+    const hasProgramEntry = nodes.some(n => n.data.type === 'program-entry');
+    if (!hasWebhookTrigger && !hasProgramEntry && nodes.length > 0) {
       issues.push({
         type: 'info',
-        message: '建議添加 Webhook 觸發節點作為流程起點',
+        message: '建議添加觸發節點作為流程起點',
         severity: 'low'
       });
     }
+
+    // 檢查HTTP節點配置
+    const httpNodes = nodes.filter(n => n.data.type === 'http-request');
+    httpNodes.forEach(node => {
+      if (!node.data.url || node.data.url.trim() === '') {
+        issues.push({
+          type: 'error',
+          message: `HTTP節點 "${node.data.label}" 缺少URL配置`,
+          severity: 'high'
+        });
+      }
+    });
+
+    // 檢查LINE節點配置
+    const lineNodes = nodes.filter(n => 
+      n.data.type === 'line-reply' || 
+      n.data.type === 'line-push' || 
+      n.data.type === 'line-carousel'
+    );
+    lineNodes.forEach(node => {
+      if (!node.data.headers?.Authorization || 
+          !node.data.headers.Authorization.includes('{')) {
+        issues.push({
+          type: 'warning',
+          message: `LINE節點 "${node.data.label}" 可能缺少Token配置`,
+          severity: 'medium'
+        });
+      }
+    });
 
     // 計算整體健康狀況
     let health = 'good';
@@ -122,8 +153,8 @@ function WorkflowStatus({ nodes, edges, workflowId, hasUnsavedChanges }) {
   };
 
   return (
-    <div className="workflow-status-panel">
-      <div className="status-header">
+    <div className={`workflow-status-panel ${mode === 'floating' ? 'floating-mode' : 'embedded-mode'}`}>
+      <div className={`status-header ${isMinimized ? 'minimized' : ''}`}>
         <div className="status-indicator">
           <span className="status-icon">{getHealthIcon()}</span>
           <span 
@@ -134,52 +165,69 @@ function WorkflowStatus({ nodes, edges, workflowId, hasUnsavedChanges }) {
           </span>
         </div>
         
-        {hasUnsavedChanges && (
-          <div className="unsaved-indicator">
-            <span className="unsaved-dot"></span>
-            <span>未儲存</span>
+        <div className="status-controls">
+          {hasUnsavedChanges && (
+            <div className="unsaved-indicator">
+              <span className="unsaved-dot"></span>
+              <span>未儲存</span>
+            </div>
+          )}
+          {mode === 'floating' && (
+            <button 
+              className="minimize-btn"
+              onClick={() => setIsMinimized(!isMinimized)}
+              title={isMinimized ? '展開' : '最小化'}
+            >
+              {isMinimized ? '▲' : '▼'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className={`status-content ${isMinimized ? 'minimized' : 'expanded'}`}>
+        <div className="status-stats">
+          <div className="stat-item">
+            <span className="stat-value">{status.stats.totalNodes}</span>
+            <span className="stat-label">節點</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">{edges.length}</span>
+            <span className="stat-label">連線</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">{status.stats.workflowRefs}</span>
+            <span className="stat-label">子流程</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value">{status.issues.length}</span>
+            <span className="stat-label">問題</span>
+          </div>
+        </div>
+
+        {status.issues.length > 0 && (
+          <div className="status-issues">
+            <div className="issues-header">
+              <span>發現 {status.issues.length} 個問題</span>
+            </div>
+            <div className="issues-list">
+              {status.issues.slice(0, 3).map((issue, index) => (
+                <div key={index} className={`issue-item issue-${issue.type}`}>
+                  <span className="issue-icon">
+                    {issue.type === 'warning' ? '⚠️' : 
+                     issue.type === 'error' ? '❌' : '💡'}
+                  </span>
+                  <span className="issue-text">{issue.message}</span>
+                </div>
+              ))}
+              {status.issues.length > 3 && (
+                <div className="more-issues">
+                  還有 {status.issues.length - 3} 個問題...
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
-
-      <div className="status-stats">
-        <div className="stat-item">
-          <span className="stat-value">{status.stats.totalNodes}</span>
-          <span className="stat-label">節點</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-value">{status.stats.connectedNodes}</span>
-          <span className="stat-label">已連接</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-value">{status.stats.workflowRefs}</span>
-          <span className="stat-label">子流程</span>
-        </div>
-      </div>
-
-      {status.issues.length > 0 && (
-        <div className="status-issues">
-          <div className="issues-header">
-            <span>發現 {status.issues.length} 個問題</span>
-          </div>
-          <div className="issues-list">
-            {status.issues.slice(0, 3).map((issue, index) => (
-              <div key={index} className={`issue-item issue-${issue.type}`}>
-                <span className="issue-icon">
-                  {issue.type === 'warning' ? '⚠️' : 
-                   issue.type === 'error' ? '❌' : '💡'}
-                </span>
-                <span className="issue-text">{issue.message}</span>
-              </div>
-            ))}
-            {status.issues.length > 3 && (
-              <div className="more-issues">
-                還有 {status.issues.length - 3} 個問題...
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

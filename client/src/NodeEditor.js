@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import ConfirmDialog from './ConfirmDialog';
 
 // 參數映射編輯器組件
 function ParamMappingEditor({ workflowId, paramMappings, onMappingsChange }) {
@@ -283,11 +284,13 @@ function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflo
 function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNotification }) {
   const [config, setConfig] = useState({});
   const [tokens, setTokens] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (selectedNode) {
       setConfig({ ...selectedNode.data });
     }
+    setShowDeleteConfirm(false);
     loadTokens();
   }, [selectedNode]);
 
@@ -1325,17 +1328,23 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
           <button onClick={handleSave} className="save-btn">💾 儲存</button>
           <button onClick={onClose} className="cancel-btn">取消</button>
           <button 
-            onClick={() => {
-              if (window.confirm('確定要刪除這個節點嗎？')) {
-                onDeleteNode(selectedNode.id);
-                onClose();
-              }
-            }} 
+            onClick={() => setShowDeleteConfirm(true)} 
             className="delete-btn"
           >
             🗑️ 刪除
           </button>
         </div>
+        
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          title="🗑️ 刪除節點"
+          message="確定要刪除這個節點嗎？此操作無法復原。"
+          onConfirm={() => {
+            onDeleteNode(selectedNode.id);
+            onClose();
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       </div>
     </div>
   );

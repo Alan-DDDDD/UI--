@@ -21,6 +21,8 @@ import Notification from './Notification';
 import WebhookUrlDialog from './WebhookUrlDialog';
 import ExecutionResults from './ExecutionResults';
 import ExecuteDialog from './ExecuteDialog';
+import WorkflowStatus from './WorkflowStatus';
+import './WorkflowStatus.css';
 
 import './App.css';
 
@@ -683,6 +685,15 @@ function FlowWrapper() {
             compact={sidebarMode === 'compact'}
             showNotification={showNotification}
           />
+          {sidebarMode === 'full' && (
+            <WorkflowStatus
+              nodes={nodes}
+              edges={edges}
+              workflowId={workflowId}
+              hasUnsavedChanges={hasUnsavedChanges}
+              mode="embedded"
+            />
+          )}
           <NodePanel onAddNode={addNode} compact={sidebarMode === 'compact'} />
           {sidebarMode === 'full' ? (
             <ExecutePanel 
@@ -733,6 +744,21 @@ function FlowWrapper() {
 
         </div>
       )}
+      
+      {/* 精簡和隱藏模式時的狀態面板 - 浮動於左下方 */}
+      {(sidebarMode === 'compact' || sidebarMode === 'hidden') && (
+        <div className={`workflow-status-floating ${sidebarMode}-mode`}>
+          <WorkflowStatus
+            nodes={nodes}
+            edges={edges}
+            workflowId={workflowId}
+            hasUnsavedChanges={hasUnsavedChanges}
+            mode="floating"
+          />
+        </div>
+      )}
+      
+
       <div className="flow-container">
         {hasUnsavedChanges && (
           <div className="unsaved-warning-overlay">
