@@ -1,11 +1,13 @@
 {
   "1f33829e-1344-4af6-b8d4-6f0e060ab3d5": {
     "id": "1f33829e-1344-4af6-b8d4-6f0e060ab3d5",
-    "name": "alan_line_msg",
+    "name": "流程",
     "description": "",
     "createdAt": "2025-07-11T01:51:03.388Z",
-    "updatedAt": "2025-07-14T09:10:59.520Z",
-    "nodeCount": 12
+    "updatedAt": "2025-07-17T05:06:55.709Z",
+    "nodeCount": 12,
+    "inputParams": [],
+    "outputParams": []
   },
   "5e74ad99-16cb-4fa5-8f95-6c53325a9b62": {
     "id": "5e74ad99-16cb-4fa5-8f95-6c53325a9b62",
@@ -111,8 +113,18 @@
     "name": "流程",
     "description": "",
     "createdAt": "2025-07-15T02:44:16.340Z",
-    "updatedAt": "2025-07-17T01:24:16.287Z",
+    "updatedAt": "2025-07-17T01:55:40.954Z",
     "nodeCount": 1,
+    "inputParams": [],
+    "outputParams": []
+  },
+  "64a346a2-ee18-418c-913f-7e6ce16100e5": {
+    "id": "64a346a2-ee18-418c-913f-7e6ce16100e5",
+    "name": "新流程(空)",
+    "description": "",
+    "createdAt": "2025-07-17T01:55:25.504Z",
+    "updatedAt": "2025-07-17T01:55:25.504Z",
+    "nodeCount": 0,
     "inputParams": [],
     "outputParams": []
   }

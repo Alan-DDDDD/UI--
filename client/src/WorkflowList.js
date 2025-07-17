@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId }) {
+function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, showNotification }) {
   const [workflows, setWorkflows] = useState([]);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newWorkflowName, setNewWorkflowName] = useState('');
@@ -82,7 +82,7 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId }) {
     } catch (error) {
       console.error('組合流程失敗:', error);
       const errorMessage = error.response?.data?.error || error.message;
-      alert('組合流程失敗: ' + errorMessage);
+      showNotification('error', '組合流程失敗', errorMessage);
     }
   };
 

@@ -6,7 +6,13 @@ function QuickActions({
   onExecuteWorkflow, 
   onValidateWorkflow,
   hasUnsavedChanges,
-  isExecuting 
+  isExecuting,
+  smartHintsEnabled,
+  onToggleSmartHints,
+  onOpenSettings,
+  onOpenManual,
+  workflowId,
+  onShowWebhookUrl
 }) {
   const [showTooltip, setShowTooltip] = useState(null);
 
@@ -31,15 +37,26 @@ function QuickActions({
               onValidateWorkflow();
             }
             break;
+          case 'h':
+            event.preventDefault();
+            onToggleSmartHints();
+            break;
+          case ',':
+            event.preventDefault();
+            onOpenSettings();
+            break;
           default:
             break;
         }
+      } else if (event.key === 'F1') {
+        event.preventDefault();
+        onOpenManual();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onSaveWorkflow, onExecuteWorkflow, onValidateWorkflow, isExecuting]);
+  }, [onSaveWorkflow, onExecuteWorkflow, onValidateWorkflow, onToggleSmartHints, onOpenSettings, onOpenManual, isExecuting]);
 
   const actions = [
     {
@@ -68,35 +85,84 @@ function QuickActions({
       onClick: onValidateWorkflow,
       highlight: false,
       disabled: isExecuting
+    },
+    {
+      id: 'smart-hints',
+      icon: smartHintsEnabled ? '💡' : '🔅',
+      label: smartHintsEnabled ? '關閉智能提示' : '開啟智能提示',
+      shortcut: 'Ctrl+H',
+      onClick: onToggleSmartHints,
+      highlight: smartHintsEnabled,
+      disabled: false
+    },
+    {
+      id: 'settings',
+      icon: '⚙️',
+      label: '流程設定',
+      shortcut: 'Ctrl+,',
+      onClick: onOpenSettings,
+      highlight: false,
+      disabled: false
+    },
+    {
+      id: 'webhook-url',
+      icon: '🔗',
+      label: 'Webhook網址',
+      shortcut: '',
+      onClick: () => onShowWebhookUrl && onShowWebhookUrl(),
+      highlight: false,
+      disabled: !workflowId
+    },
+    {
+      id: 'manual',
+      icon: '📖',
+      label: '使用說明書',
+      shortcut: 'F1',
+      onClick: onOpenManual,
+      highlight: false,
+      disabled: false
     }
   ];
 
+  const renderActionButton = (action, index) => (
+    <div
+      key={action.id}
+      className={`quick-action-item ${action.highlight ? 'highlight' : ''} ${action.disabled ? 'disabled' : ''}`}
+      data-action={action.id}
+      onClick={action.disabled ? undefined : action.onClick}
+      onMouseEnter={() => setShowTooltip(action.id)}
+      onMouseLeave={() => setShowTooltip(null)}
+    >
+      <div className="action-icon">{action.icon}</div>
+      
+      {showTooltip === action.id && (
+        <div className="action-tooltip">
+          <div className="tooltip-label">{action.label}</div>
+          <div className="tooltip-shortcut">{action.shortcut}</div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="quick-actions-toolbar">
-      {actions.map(action => (
-        <div
-          key={action.id}
-          className={`quick-action-item ${action.highlight ? 'highlight' : ''} ${action.disabled ? 'disabled' : ''}`}
-          onClick={action.disabled ? undefined : action.onClick}
-          onMouseEnter={() => setShowTooltip(action.id)}
-          onMouseLeave={() => setShowTooltip(null)}
-        >
-          <div className="action-icon">{action.icon}</div>
-          
-          {showTooltip === action.id && (
-            <div className="action-tooltip">
-              <div className="tooltip-label">{action.label}</div>
-              <div className="tooltip-shortcut">{action.shortcut}</div>
-            </div>
-          )}
-        </div>
-      ))}
+      {/* 主要操作 */}
+      {actions.slice(0, 3).map((action, index) => renderActionButton(action, index))}
+      
+      {/* 分隔線 */}
+      <div className="action-separator"></div>
+      
+      {/* 輔助功能 */}
+      {actions.slice(3).map((action, index) => renderActionButton(action, index + 3))}
       
       {isExecuting && (
-        <div className="execution-indicator">
-          <div className="spinner-small"></div>
-          <span>執行中...</span>
-        </div>
+        <>
+          <div className="action-separator"></div>
+          <div className="execution-indicator">
+            <div className="spinner-small"></div>
+            <span>執行中...</span>
+          </div>
+        </>
       )}
     </div>
   );

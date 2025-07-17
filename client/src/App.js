@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import ReactFlow, { 
   addEdge, 
   useNodesState, 
@@ -17,6 +17,8 @@ import WorkflowSettings from './WorkflowSettings';
 import UserManual from './UserManual';
 import SmartHints from './SmartHints';
 import QuickActions from './QuickActions';
+import Notification from './Notification';
+import WebhookUrlDialog from './WebhookUrlDialog';
 
 import './App.css';
 
@@ -57,6 +59,50 @@ function FlowWrapper() {
   const [showWorkflowSettings, setShowWorkflowSettings] = useState(false);
   const [showUserManual, setShowUserManual] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [smartHintsEnabled, setSmartHintsEnabled] = useState(() => {
+    const saved = localStorage.getItem('smartHintsEnabled');
+    return saved !== null ? JSON.parse(saved) : false; // 預設關閉
+  });
+  const [showHintsPrompt, setShowHintsPrompt] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showWebhookUrl, setShowWebhookUrl] = useState(false);
+
+  // 通知系統
+  const showNotification = (type, title, message = '') => {
+    const id = Date.now();
+    const notification = { id, type, title, message };
+    setNotifications(prev => [...prev, notification]);
+    
+    // 自動移除通知
+    setTimeout(() => {
+      removeNotification(id);
+    }, type === 'error' ? 6000 : 4000);
+  };
+
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  // 儲存智能提示設定到本地儲存
+  useEffect(() => {
+    localStorage.setItem('smartHintsEnabled', JSON.stringify(smartHintsEnabled));
+  }, [smartHintsEnabled]);
+
+  // 每次開啟頁面都檢查是否需要顯示智能提示啟用提醒
+  useEffect(() => {
+    if (!smartHintsEnabled) {
+      setShowHintsPrompt(true);
+    }
+  }, []);
+
+  const handleEnableSmartHints = () => {
+    setSmartHintsEnabled(true);
+    setShowHintsPrompt(false);
+  };
+
+  const handleDismissPrompt = () => {
+    setShowHintsPrompt(false);
+  };
   const { project } = useReactFlow();
 
   const handleParamsChange = (newInputParams, newOutputParams) => {
@@ -302,7 +348,7 @@ function FlowWrapper() {
 
   const createGroup = () => {
     if (selectedNodes.length < 2) {
-      alert('請選擇至少2個節點進行分組');
+      showNotification('warning', '請選擇至少2個節點進行分組');
       return;
     }
     setShowGroupDialog(true);
@@ -463,15 +509,15 @@ function FlowWrapper() {
         setWorkflowId(data.workflowId);
       }
       setHasUnsavedChanges(false);
-      alert('流程已儲存');
+      showNotification('success', '流程已儲存');
     } catch (error) {
-      alert('儲存失敗: ' + error.message);
+      showNotification('error', '儲存失敗', error.message);
     }
   };
 
   const handleExecuteWorkflow = async () => {
     if (!workflowId) {
-      alert('請先儲存流程');
+      showNotification('warning', '請先儲存流程');
       return;
     }
     
@@ -485,12 +531,12 @@ function FlowWrapper() {
       const result = await response.json();
       
       if (result.success) {
-        alert('流程執行成功');
+        showNotification('success', '流程執行成功');
       } else {
-        alert('流程執行失敗: ' + (result.error || '未知錯誤'));
+        showNotification('error', '流程執行失敗', result.error || '未知錯誤');
       }
     } catch (error) {
-      alert('執行失敗: ' + error.message);
+      showNotification('error', '執行失敗', error.message);
     } finally {
       setIsExecuting(false);
     }
@@ -535,9 +581,9 @@ function FlowWrapper() {
     }
     
     if (issues.length === 0) {
-      alert('✅ 流程驗證通過，沒有發現問題');
+      showNotification('success', '流程驗證通過', '沒有發現問題');
     } else {
-      alert('⚠️ 發現以下問題:\n' + issues.join('\n'));
+      showNotification('warning', '發現流程問題', issues.join('\n'));
     }
   };
 
@@ -564,7 +610,7 @@ function FlowWrapper() {
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('載入流程失敗:', error);
-      alert('載入流程失敗: ' + error.message);
+      showNotification('error', '載入流程失敗', error.message);
     }
   };
 
@@ -598,6 +644,7 @@ function FlowWrapper() {
             onNewWorkflow={handleNewWorkflow}
             currentWorkflowId={workflowId}
             compact={sidebarMode === 'compact'}
+            showNotification={showNotification}
           />
           <NodePanel onAddNode={addNode} compact={sidebarMode === 'compact'} />
           {sidebarMode === 'full' ? (
@@ -612,6 +659,7 @@ function FlowWrapper() {
               nodeGroups={nodeGroups}
               inputParams={inputParams}
               outputParams={outputParams}
+              showNotification={showNotification}
             />
           ) : sidebarMode === 'compact' && (
             <div style={{padding: '10px', textAlign: 'center'}}>
@@ -635,7 +683,7 @@ function FlowWrapper() {
                     }
                     setHasUnsavedChanges(false);
                   } catch (error) {
-                    alert('儲存失敗: ' + error.message);
+                    showNotification('error', '儲存失敗', error.message);
                   }
                 }}
                 className={`toolbar-btn ${hasUnsavedChanges ? 'save-btn-highlight' : ''}`}
@@ -663,30 +711,24 @@ function FlowWrapper() {
           onValidateWorkflow={handleValidateWorkflow}
           hasUnsavedChanges={hasUnsavedChanges}
           isExecuting={isExecuting}
+          smartHintsEnabled={smartHintsEnabled}
+          onToggleSmartHints={() => setSmartHintsEnabled(!smartHintsEnabled)}
+          onOpenSettings={() => setShowWorkflowSettings(true)}
+          onOpenManual={() => setShowUserManual(true)}
+          workflowId={workflowId}
+          onShowWebhookUrl={() => setShowWebhookUrl(true)}
         />
         
-        <div className="workflow-settings-btn">
-          <button 
-            onClick={() => setShowWorkflowSettings(true)}
-            className="settings-btn"
-            title="流程設定"
-          >
-            ⚙️
-          </button>
-          <button 
-            onClick={() => setShowUserManual(true)}
-            className="manual-btn"
-            title="使用說明書"
-          >
-            📖
-          </button>
-        </div>
+
         
         {/* 智能提示面板 */}
-        <SmartHints
-          nodes={nodes}
-          selectedNode={selectedNode}
-        />
+        {smartHintsEnabled && (
+          <SmartHints
+            nodes={nodes}
+            selectedNode={selectedNode}
+            showNotification={showNotification}
+          />
+        )}
         {/* 群組功能暫時取消
         {selectedNodes.length > 1 && (
           <div className="group-controls">
@@ -725,6 +767,7 @@ function FlowWrapper() {
           onUpdateNode={updateNode}
           onDeleteNode={deleteNode}
           onClose={() => setSelectedNode(null)}
+          showNotification={showNotification}
         />
         
         <WorkflowSettings
@@ -735,6 +778,7 @@ function FlowWrapper() {
           inputParams={inputParams}
           outputParams={outputParams}
           onParamsChange={handleParamsChange}
+          workflowId={workflowId}
         />
         
         <UserManual
@@ -759,6 +803,37 @@ function FlowWrapper() {
             </div>
           </div>
         )}
+        
+        {showHintsPrompt && (
+          <div className="dialog-overlay">
+            <div className="dialog smart-hints-prompt">
+              <div className="prompt-icon">💡</div>
+              <h4>啟用智能提示？</h4>
+              <p>智能提示可以幫助您：</p>
+              <ul>
+                <li>• 即時發現流程問題</li>
+                <li>• 提供最佳實踐建議</li>
+                <li>• 優化流程設計</li>
+              </ul>
+              <p className="prompt-note">您可以隨時在工具列中開啟/關閉此功能</p>
+              <div className="dialog-buttons">
+                <button onClick={handleEnableSmartHints} className="primary-btn">啟用智能提示</button>
+                <button onClick={handleDismissPrompt}>略過</button>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <Notification
+          notifications={notifications}
+          onRemove={removeNotification}
+        />
+        
+        <WebhookUrlDialog
+          isOpen={showWebhookUrl}
+          onClose={() => setShowWebhookUrl(false)}
+          workflowId={workflowId}
+        />
       </div>
     </div>
   );

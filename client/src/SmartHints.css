@@ -1,7 +1,7 @@
 /* 智能提示面板樣式 */
 .smart-hints-panel {
   position: fixed;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   width: 320px;
   max-height: 400px;

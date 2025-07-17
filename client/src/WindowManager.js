@@ -6,7 +6,8 @@ function WindowManager({
   onSelectWorkflow, 
   onNewWorkflow, 
   currentWorkflowId,
-  compact = false
+  compact = false,
+  showNotification
 }) {
   const [showWorkflowWindow, setShowWorkflowWindow] = useState(false);
   const [showTokenWindow, setShowTokenWindow] = useState(false);
@@ -55,6 +56,7 @@ function WindowManager({
                   setShowWorkflowWindow(false);
                 }}
                 currentWorkflowId={currentWorkflowId}
+                showNotification={showNotification}
               />
             </div>
           </div>

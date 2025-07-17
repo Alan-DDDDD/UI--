@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups, inputParams, outputParams }) {
+function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups, inputParams, outputParams, showNotification }) {
   const [inputData, setInputData] = useState('{}');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,13 +36,13 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
       }
     } catch (error) {
       const errorMessage = error.response?.data?.error || error.message;
-      alert('儲存失敗: ' + errorMessage);
+      showNotification('error', '儲存失敗', errorMessage);
     }
   };
 
   const executeWorkflow = async () => {
     if (!workflowId) {
-      alert('請先儲存工作流程');
+      showNotification('warning', '請先儲存工作流程');
       return;
     }
 
@@ -58,7 +58,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
       setResults(response.data);
     } catch (error) {
       const errorMessage = error.response?.data?.error || error.message;
-      alert('執行失敗: ' + errorMessage);
+      showNotification('error', '執行失敗', errorMessage);
     }
     setLoading(false);
   };

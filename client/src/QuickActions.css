@@ -6,13 +6,15 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #2d2d2d;
   border: 1px solid #404040;
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 12px;
+  padding: 8px 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
+  z-index: 1500;
+  max-width: 90vw;
+  overflow: visible;
 }
 
 .quick-action-item {
@@ -20,13 +22,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: #333;
   border: 1px solid #404040;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .quick-action-item:hover {
@@ -41,6 +44,41 @@
   animation: pulse 2s infinite;
 }
 
+.quick-action-item[data-action="smart-hints"]:not(.highlight) {
+  background: #333;
+  border-color: #555;
+  opacity: 0.6;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.quick-action-item[data-action="smart-hints"]:not(.highlight):hover {
+  background: #444;
+  opacity: 0.8;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.quick-action-item[data-action="smart-hints"].highlight {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-color: #FFD700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  animation: lightGlow 2s infinite alternate;
+}
+
+.quick-action-item[data-action="smart-hints"].highlight:hover {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-color: #FFD700;
+  transform: translateY(-1px);
+}
+
+@keyframes lightGlow {
+  0% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+}
+
 .quick-action-item.disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -48,12 +86,12 @@
 }
 
 .action-icon {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .action-tooltip {
   position: absolute;
-  bottom: -45px;
+  bottom: -50px;
   left: 50%;
   transform: translateX(-50%);
   background: #1a1a1a;
@@ -62,21 +100,23 @@
   border-radius: 6px;
   font-size: 12px;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 1px solid #404040;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 .action-tooltip::before {
   content: '';
   position: absolute;
-  top: -4px;
+  top: -5px;
   left: 50%;
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-bottom: 4px solid #1a1a1a;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #1a1a1a;
 }
 
 .tooltip-label {
@@ -87,6 +127,14 @@
 .tooltip-shortcut {
   color: #999;
   font-size: 11px;
+}
+
+.action-separator {
+  width: 1px;
+  height: 24px;
+  background: #555;
+  margin: 0 4px;
+  flex-shrink: 0;
 }
 
 .execution-indicator {
@@ -131,12 +179,33 @@
     left: 10px;
     right: 10px;
     transform: none;
-    justify-content: center;
+    justify-content: flex-start;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  
+  .quick-action-item {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .action-icon {
+    font-size: 12px;
+  }
+  
+  .action-separator {
+    height: 20px;
+    margin: 0 2px;
   }
   
   .action-tooltip {
     bottom: -35px;
     font-size: 11px;
     padding: 6px 10px;
+  }
+  
+  .execution-indicator {
+    padding: 0 8px;
+    font-size: 11px;
   }
 }

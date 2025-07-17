@@ -7,7 +7,8 @@ function WorkflowSettings({
   onWorkflowNameChange,
   inputParams = [], 
   outputParams = [], 
-  onParamsChange 
+  onParamsChange,
+  workflowId
 }) {
   const [activeTab, setActiveTab] = useState('basic');
   const [localWorkflowName, setLocalWorkflowName] = useState(workflowName);
@@ -84,6 +85,12 @@ function WorkflowSettings({
           >
             ⚙️ 參數設定
           </button>
+          <button 
+            className={activeTab === 'webhook' ? 'active' : ''}
+            onClick={() => setActiveTab('webhook')}
+          >
+            🔗 Webhook
+          </button>
         </div>
 
         <div className="settings-content">
@@ -108,6 +115,68 @@ function WorkflowSettings({
             </div>
           )}
 
+          {activeTab === 'webhook' && (
+            <div className="webhook-settings">
+              {workflowId ? (
+                <>
+                  <div className="webhook-info">
+                    <h4>🔗 Webhook 網址</h4>
+                    <p>您可以使用以下網址來觸發此流程：</p>
+                  </div>
+                  
+                  <div className="webhook-url-section">
+                    <label>🌐 一般 Webhook：</label>
+                    <div className="webhook-url-display">
+                      <input 
+                        type="text" 
+                        value={`http://localhost:3001/webhook/${workflowId}`}
+                        readOnly
+                        className="webhook-url-readonly"
+                      />
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(`http://localhost:3001/webhook/${workflowId}`)}
+                        className="copy-webhook-btn"
+                      >
+                        📋
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="webhook-url-section">
+                    <label>📱 LINE Bot Webhook：</label>
+                    <div className="webhook-url-display">
+                      <input 
+                        type="text" 
+                        value={`http://localhost:3001/webhook/line/${workflowId}`}
+                        readOnly
+                        className="webhook-url-readonly"
+                      />
+                      <button 
+                        onClick={() => navigator.clipboard.writeText(`http://localhost:3001/webhook/line/${workflowId}`)}
+                        className="copy-webhook-btn"
+                      >
+                        📋
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="webhook-tips">
+                    <h5>💡 使用提示：</h5>
+                    <ul>
+                      <li>將網址設定到外部系統的 Webhook 中</li>
+                      <li>LINE Bot 請使用專用的 LINE Webhook 網址</li>
+                      <li>確保流程已儲存並包含 Webhook 觸發節點</li>
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <div className="no-webhook">
+                  <p>⚠️ 請先儲存流程才能取得 Webhook 網址</p>
+                </div>
+              )}
+            </div>
+          )}
+          
           {activeTab === 'params' && (
             <div className="params-settings">
               <div className="param-section">

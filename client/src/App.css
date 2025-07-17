@@ -1377,43 +1377,7 @@ label {
   font-size: 12px;
 }
 
-/* 流程設定按鈕 */
-.workflow-settings-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-}
 
-.settings-btn,
-.manual-btn {
-  background: #2d2d2d;
-  color: #e0e0e0;
-  border: 1px solid #404040;
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  margin-left: 10px;
-}
-
-.settings-btn:hover,
-.manual-btn:hover {
-  background: #404040;
-  transform: scale(1.1);
-}
-
-.manual-btn {
-  background: #4CAF50;
-  border-color: #4CAF50;
-}
-
-.manual-btn:hover {
-  background: #45a049;
-  border-color: #45a049;
-}
 
 /* 流程設定視窗 */
 .workflow-settings-overlay {
@@ -2157,9 +2121,8 @@ label {
 /* 智能提示面板 */
 .smart-hints-panel {
   position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 20px;
+  right: 20px;
   width: 400px;
   max-height: 300px;
   background: #2d2d2d;
@@ -2302,17 +2265,17 @@ label {
 
 /* 提示面板動畫 */
 .smart-hints-panel {
-  animation: slideDown 0.3s ease-out;
+  animation: slideUp 0.3s ease-out;
 }
 
-@keyframes slideDown {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 }
 
@@ -2592,6 +2555,90 @@ label {
   font-style: italic;
 }
 
+/* Webhook 設定樣式 */
+.webhook-settings {
+  padding: 20px;
+}
+
+.webhook-info h4 {
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.webhook-info p {
+  color: #b0b0b0;
+  margin-bottom: 20px;
+}
+
+.webhook-url-section {
+  margin-bottom: 20px;
+}
+
+.webhook-url-section label {
+  display: block;
+  color: #e0e0e0;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.webhook-url-display {
+  display: flex;
+  gap: 8px;
+}
+
+.webhook-url-readonly {
+  flex: 1;
+  padding: 10px;
+  background: #404040;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.copy-webhook-btn {
+  background: #4CAF50;
+  border: none;
+  color: white;
+  padding: 10px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copy-webhook-btn:hover {
+  background: #45a049;
+}
+
+.webhook-tips {
+  background: #333;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #4CAF50;
+}
+
+.webhook-tips h5 {
+  color: #e0e0e0;
+  margin: 0 0 10px 0;
+}
+
+.webhook-tips ul {
+  color: #b0b0b0;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.webhook-tips li {
+  margin-bottom: 5px;
+}
+
+.no-webhook {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
+
 /* 狀態面板動畫 */
 .workflow-status-panel {
   animation: slideUp 0.3s ease-out;
@@ -2620,4 +2667,55 @@ label {
   .status-stats {
     justify-content: space-around;
   }
+}
+/* 智能提示啟用提示框 */
+.smart-hints-prompt {
+  max-width: 400px;
+  text-align: center;
+}
+
+.prompt-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.smart-hints-prompt h4 {
+  color: #e0e0e0;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.smart-hints-prompt p {
+  color: #b0b0b0;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.smart-hints-prompt ul {
+  text-align: left;
+  color: #b0b0b0;
+  margin: 16px 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.smart-hints-prompt li {
+  margin-bottom: 8px;
+  padding-left: 16px;
+}
+
+.prompt-note {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+  margin-top: 16px;
+}
+
+.primary-btn {
+  background: #4CAF50 !important;
+  color: white !important;
+}
+
+.primary-btn:hover {
+  background: #45a049 !important;
 }

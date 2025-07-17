@@ -280,7 +280,7 @@ function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflo
   );
 }
 
-function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
+function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNotification }) {
   const [config, setConfig] = useState({});
   const [tokens, setTokens] = useState([]);
 
@@ -310,7 +310,7 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose }) {
       try {
         updatedConfig.body = JSON.parse(config.customData);
       } catch (e) {
-        alert('資料格式錯誤，請輸入正確的JSON格式');
+        showNotification('error', '資料格式錯誤', '請輸入正確的JSON格式');
         return;
       }
     }
