@@ -490,11 +490,12 @@ const UserManual = ({ isOpen, onClose }) => {
                   <div className="step-number">1</div>
                   <div className="step-content">
                     <h4>準備輸入資料</h4>
-                    <p>在執行面板中輸入流程所需的初始資料</p>
+                    <p>點擊執行按鈕時，系統會自動檢查是否需要輸入參數</p>
                     <ul>
-                      <li>JSON格式的資料</li>
-                      <li>符合流程參數定義</li>
-                      <li>包含所有必要欄位</li>
+                      <li><strong>有參數流程：</strong>彈出參數輸入對話框</li>
+                      <li><strong>無參數流程：</strong>直接開始執行</li>
+                      <li><strong>必填參數：</strong>標示紅色星號(*)</li>
+                      <li><strong>參數驗證：</strong>自動檢查格式和必填欄位</li>
                     </ul>
                   </div>
                 </div>
@@ -526,11 +527,12 @@ const UserManual = ({ isOpen, onClose }) => {
                   <div className="step-number">4</div>
                   <div className="step-content">
                     <h4>查看結果</h4>
-                    <p>檢查執行結果和輸出資料</p>
+                    <p>執行完成後會自動彈出執行結果視窗</p>
                     <ul>
-                      <li>最終輸出資料</li>
-                      <li>執行統計資訊</li>
-                      <li>效能分析報告</li>
+                      <li><strong>逐步狀態：</strong>每個步驟的成功/失敗狀態</li>
+                      <li><strong>結果統計：</strong>成功、失敗步驟數量</li>
+                      <li><strong>錯誤詳情：</strong>JSON格式的完整錯誤資訊</li>
+                      <li><strong>節點資訊：</strong>顯示各節點的執行結果</li>
                     </ul>
                   </div>
                 </div>
@@ -619,19 +621,76 @@ const UserManual = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
+              <h3>執行結果視窗 (v2.0.0新增)</h3>
+              <div className="result-window-features">
+                <div className="feature-item">
+                  <h4>📊 結果概覽</h4>
+                  <ul>
+                    <li>總步驟數、成功數、失敗數</li>
+                    <li>成功率百分比顯示</li>
+                    <li>一目了然的執行狀態</li>
+                  </ul>
+                </div>
+                <div className="feature-item">
+                  <h4>✅ 成功步驟</h4>
+                  <ul>
+                    <li>綠色邊框和背景</li>
+                    <li>顯示執行結果摘要</li>
+                    <li>節點名稱和狀態</li>
+                  </ul>
+                </div>
+                <div className="feature-item">
+                  <h4>❌ 失敗步驟</h4>
+                  <ul>
+                    <li>紅色邊框和背景</li>
+                    <li>詳細錯誤訊息顯示</li>
+                    <li>JSON格式的錯誤資料</li>
+                    <li>等寬字體方便閱讀</li>
+                  </ul>
+                </div>
+              </div>
+
+              <h3>參數輸入對話框 (v2.0.0新增)</h3>
+              <div className="param-dialog-features">
+                <div className="feature-item">
+                  <h4>📋 動態表單</h4>
+                  <ul>
+                    <li>根據流程定義自動生成輸入表單</li>
+                    <li>支援必填和選填參數</li>
+                    <li>參數描述和預設值</li>
+                  </ul>
+                </div>
+                <div className="feature-item">
+                  <h4>✅ 驗證機制</h4>
+                  <ul>
+                    <li>必填欄位檢查</li>
+                    <li>資料格式驗證</li>
+                    <li>即時錯誤提示</li>
+                  </ul>
+                </div>
+                <div className="feature-item">
+                  <h4>🚀 使用方式</h4>
+                  <ul>
+                    <li>點擊執行按鈕自動彈出</li>
+                    <li>填寫完成後點擊「開始執行」</li>
+                    <li>可以取消並重新輸入</li>
+                  </ul>
+                </div>
+              </div>
+
               <h3>除錯技巧</h3>
               <div className="debug-tips">
                 <div className="tip-card">
-                  <h4>📊 查看執行日誌</h4>
-                  <p>詳細的執行記錄幫助識別問題</p>
+                  <h4>📊 查看執行結果視窗</h4>
+                  <p>使用新的結果視窗查看每個步驟的詳細狀態</p>
                 </div>
                 <div className="tip-card">
-                  <h4>🔍 檢查資料流</h4>
-                  <p>確認資料在節點間正確傳遞</p>
+                  <h4>🔍 分析錯誤訊息</h4>
+                  <p>JSON格式的錯誤資訊提供完整的除錯資訊</p>
                 </div>
                 <div className="tip-card">
-                  <h4>⚠️ 注意錯誤訊息</h4>
-                  <p>錯誤訊息提供問題的具體資訊</p>
+                  <h4>⚠️ 注意狀態碼</h4>
+                  <p>HTTP錯誤狀態碼幫助快速定位問題</p>
                 </div>
                 <div className="tip-card">
                   <h4>🎯 逐步測試</h4>
@@ -775,6 +834,40 @@ const UserManual = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
+              <h3>v2.0.0 新增功能</h3>
+              <div className="v2-features">
+                <div className="v2-feature-card">
+                  <h4>📊 執行結果分析</h4>
+                  <p>全新的執行結果視窗提供詳細的執行分析</p>
+                  <ul>
+                    <li>成功/失敗統計和百分比</li>
+                    <li>逐步執行狀態追蹤</li>
+                    <li>詳細錯誤資訊和JSON格式顯示</li>
+                    <li>節點結果和時間戳記錄</li>
+                  </ul>
+                </div>
+                <div className="v2-feature-card">
+                  <h4>📋 參數化執行</h4>
+                  <p>智能的參數輸入對話框提升使用體驗</p>
+                  <ul>
+                    <li>根據流程定義動態生成表單</li>
+                    <li>必填參數標示和驗證</li>
+                    <li>參數描述和預設值支援</li>
+                    <li>即時驗證和錯誤提示</li>
+                  </ul>
+                </div>
+                <div className="v2-feature-card">
+                  <h4>🔧 改進的錯誤處理</h4>
+                  <p>更完善的錯誤處理和除錯功能</p>
+                  <ul>
+                    <li>修復LINE回覆400錯誤顯示問題</li>
+                    <li>JSON格式的完整錯誤資訊</li>
+                    <li>改進的錯誤傳播機制</li>
+                    <li>更長的錯誤通知顯示時間</li>
+                  </ul>
+                </div>
+              </div>
+
               <h3>安全性考量</h3>
               <div className="security-section">
                 <h4>🔐 敏感資料保護</h4>
@@ -907,6 +1000,20 @@ const UserManual = ({ isOpen, onClose }) => {
                       <li>檢查用戶ID或Reply Token有效性</li>
                       <li>驗證訊息格式符合LINE API規範</li>
                       <li>確認Bot已加入聊天室或好友</li>
+                      <li><strong>v2.0.0:</strong> 查看執行結果視窗的詳細錯誤資訊</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="faq-item">
+                  <h4>Q: LINE回覆顯示成功但實際失敗？</h4>
+                  <div className="faq-answer">
+                    <p><strong>A:</strong> v2.0.0已修復此問題：</p>
+                    <ul>
+                      <li>現在400錯誤會正確顯示為失敗狀態</li>
+                      <li>執行結果視窗顯示詳細的錯誤資訊</li>
+                      <li>JSON格式的完整錯誤回應</li>
+                      <li>更準確的執行狀態追蹤</li>
                     </ul>
                   </div>
                 </div>
@@ -920,6 +1027,48 @@ const UserManual = ({ isOpen, onClose }) => {
                       <li>檢查SSL憑證有效性</li>
                       <li>驗證LINE平台的Webhook設定</li>
                       <li>查看伺服器日誌</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <h3>v2.0.0 新功能問題</h3>
+              <div className="faq-section">
+                <div className="faq-item">
+                  <h4>Q: 執行結果視窗沒有出現？</h4>
+                  <div className="faq-answer">
+                    <p><strong>A:</strong> 可能原因：</p>
+                    <ul>
+                      <li>流程沒有正確執行完成</li>
+                      <li>瀏覽器彈出視窗被阻擋</li>
+                      <li>檢查瀏覽器控制台是否有錯誤</li>
+                      <li>重新整理頁面後再試</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="faq-item">
+                  <h4>Q: 參數輸入對話框沒有彈出？</h4>
+                  <div className="faq-answer">
+                    <p><strong>A:</strong> 檢查項目：</p>
+                    <ul>
+                      <li>確認流程有定義輸入參數</li>
+                      <li>檢查流程設定中的參數配置</li>
+                      <li>無參數流程會直接執行</li>
+                      <li>瀏覽器彈出視窗設定</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="faq-item">
+                  <h4>Q: 錯誤資訊看不清楚？</h4>
+                  <div className="faq-answer">
+                    <p><strong>A:</strong> v2.0.0改進：</p>
+                    <ul>
+                      <li>使用等寬字體顯示JSON錯誤</li>
+                      <li>錯誤訊息有獨立的背景區塊</li>
+                      <li>支援長文字自動換行</li>
+                      <li>可以複製錯誤內容進行分析</li>
                     </ul>
                   </div>
                 </div>
@@ -947,6 +1096,10 @@ const UserManual = ({ isOpen, onClose }) => {
                 <div className="help-card">
                   <h4>📚 查看文件</h4>
                   <p>詳細閱讀本說明書的相關章節</p>
+                </div>
+                <div className="help-card">
+                  <h4>📊 使用執行結果視窗</h4>
+                  <p>v2.0.0新功能：查看詳細的執行狀態和錯誤</p>
                 </div>
                 <div className="help-card">
                   <h4>🔍 檢查日誌</h4>
