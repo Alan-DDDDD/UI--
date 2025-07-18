@@ -215,7 +215,7 @@
         },
         "width": 150,
         "height": 58,
-        "selected": false,
+        "selected": true,
         "positionAbsolute": {
           "x": 520.5050977803594,
           "y": 255.61054564756432
@@ -487,14 +487,13 @@
         "targetHandle": null,
         "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530",
         "data": {
-          "active": false
+          "active": true
         },
         "style": {
-          "stroke": "#FFD700",
-          "strokeWidth": 3,
-          "strokeDasharray": "5,5"
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
         },
-        "animated": false,
+        "animated": true,
         "selected": false
       },
       {
@@ -513,17 +512,18 @@
       },
       {
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#FFD700",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
         },
         "type": "smoothstep",
-        "animated": true,
+        "animated": false,
         "source": "condition-1752217051986",
         "sourceHandle": null,
         "target": "line-carousel-1752217063226",
         "targetHandle": null,
         "data": {
-          "active": true
+          "active": false
         },
         "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226",
         "selected": false
@@ -1788,6 +1788,453 @@
   "b40798a0-de2e-415b-b7a8-0fe5b3c51b1d": {
     "nodes": [],
     "edges": [],
+    "nodeGroups": {},
+    "inputParams": [],
+    "outputParams": []
+  },
+  "831e9617-f6f8-429d-a86c-c1026bf8b605": {
+    "nodes": [
+      {
+        "id": "http-request-1752826552684",
+        "type": "default",
+        "position": {
+          "x": 50,
+          "y": 150
+        },
+        "data": {
+          "label": "API呼叫",
+          "type": "http-request",
+          "url": "",
+          "method": "GET"
+        },
+        "className": "node-http-request",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "condition-1752826554675",
+        "type": "default",
+        "position": {
+          "x": 250,
+          "y": 150
+        },
+        "data": {
+          "label": "條件判斷",
+          "type": "condition",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "你好"
+        },
+        "className": "node-condition",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "if-condition-1752826555204",
+        "type": "default",
+        "position": {
+          "x": 450,
+          "y": 150
+        },
+        "data": {
+          "label": "IF條件",
+          "type": "if-condition",
+          "conditions": [
+            {
+              "field": "{message}",
+              "operator": "contains",
+              "value": "你好"
+            }
+          ],
+          "logic": "AND"
+        },
+        "className": "node-if-condition",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "data-map-1752826555636",
+        "type": "default",
+        "position": {
+          "x": 650,
+          "y": 150
+        },
+        "data": {
+          "label": "資料映射",
+          "type": "data-map",
+          "name": "",
+          "mappings": [
+            {
+              "from": "",
+              "to": ""
+            }
+          ]
+        },
+        "className": "node-data-map",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "notification-1752826556404",
+        "type": "default",
+        "position": {
+          "x": 850,
+          "y": 150
+        },
+        "data": {
+          "label": "顯示訊息",
+          "type": "notification",
+          "message": ""
+        },
+        "className": "node-notification",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "line-push-1752826557899",
+        "type": "default",
+        "position": {
+          "x": 1050,
+          "y": 150
+        },
+        "data": {
+          "label": "LINE推送",
+          "type": "line-push",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/push",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer ",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "to": "",
+            "messages": [
+              {
+                "type": "text",
+                "text": ""
+              }
+            ]
+          }
+        },
+        "className": "node-line-push",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "line-reply-1752826559803",
+        "type": "default",
+        "position": {
+          "x": 50,
+          "y": 270
+        },
+        "data": {
+          "label": "LINE回覆",
+          "type": "line-reply",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer ",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "",
+            "messages": [
+              {
+                "type": "text",
+                "text": ""
+              }
+            ]
+          }
+        },
+        "className": "node-line-reply",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "line-carousel-1752826560301",
+        "type": "default",
+        "position": {
+          "x": 250,
+          "y": 270
+        },
+        "data": {
+          "label": "LINE多頁",
+          "type": "line-carousel",
+          "name": "",
+          "headers": {
+            "Authorization": "Bearer ",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "template",
+                "altText": "多頁訊息",
+                "template": {
+                  "type": "carousel",
+                  "columns": [
+                    {
+                      "title": "標题1",
+                      "text": "內容1",
+                      "actions": [
+                        {
+                          "type": "message",
+                          "label": "選擇1",
+                          "text": "選擇1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "className": "node-line-carousel",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "webhook-trigger-1752826560812",
+        "type": "default",
+        "position": {
+          "x": 450,
+          "y": 270
+        },
+        "data": {
+          "label": "Webhook觸發",
+          "type": "webhook-trigger",
+          "name": "",
+          "description": ""
+        },
+        "className": "node-webhook-trigger",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "program-entry-1752826561332",
+        "type": "default",
+        "position": {
+          "x": 650,
+          "y": 270
+        },
+        "data": {
+          "label": "程式進入點",
+          "type": "program-entry",
+          "name": "開始",
+          "description": "流程的起始點"
+        },
+        "className": "node-program-entry",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      },
+      {
+        "id": "existing-workflow-1752826563308",
+        "type": "default",
+        "position": {
+          "x": 850,
+          "y": 270
+        },
+        "data": {
+          "label": "現有流程",
+          "type": "existing-workflow",
+          "workflowId": "",
+          "workflowName": "請選擇流程"
+        },
+        "className": "node-existing-workflow",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41
+      }
+    ],
+    "edges": [
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "http-request-1752826552684",
+        "sourceHandle": null,
+        "target": "condition-1752826554675",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-http-request-1752826552684-condition-1752826554675"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "condition-1752826554675",
+        "sourceHandle": null,
+        "target": "if-condition-1752826555204",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-condition-1752826554675-if-condition-1752826555204"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "if-condition-1752826555204",
+        "sourceHandle": null,
+        "target": "data-map-1752826555636",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-if-condition-1752826555204-data-map-1752826555636"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "data-map-1752826555636",
+        "sourceHandle": null,
+        "target": "notification-1752826556404",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-data-map-1752826555636-notification-1752826556404"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "notification-1752826556404",
+        "sourceHandle": null,
+        "target": "line-push-1752826557899",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-notification-1752826556404-line-push-1752826557899"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "line-push-1752826557899",
+        "sourceHandle": null,
+        "target": "line-reply-1752826559803",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-line-push-1752826557899-line-reply-1752826559803"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "line-reply-1752826559803",
+        "sourceHandle": null,
+        "target": "line-carousel-1752826560301",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-line-reply-1752826559803-line-carousel-1752826560301"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "line-carousel-1752826560301",
+        "sourceHandle": null,
+        "target": "webhook-trigger-1752826560812",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-line-carousel-1752826560301-webhook-trigger-1752826560812"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "webhook-trigger-1752826560812",
+        "sourceHandle": null,
+        "target": "program-entry-1752826561332",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-webhook-trigger-1752826560812-program-entry-1752826561332"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "program-entry-1752826561332",
+        "sourceHandle": null,
+        "target": "existing-workflow-1752826563308",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "id": "reactflow__edge-program-entry-1752826561332-existing-workflow-1752826563308"
+      }
+    ],
     "nodeGroups": {},
     "inputParams": [],
     "outputParams": []

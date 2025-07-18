@@ -327,6 +327,10 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
       updatedConfig.label = config.name || '資料映射';
     } else if (selectedNode.data.type === 'webhook-trigger') {
       updatedConfig.label = config.name || 'Webhook觸發';
+    } else if (selectedNode.data.type === 'if-condition') {
+      const conditionCount = (config.conditions || []).length;
+      const logic = config.logic || 'AND';
+      updatedConfig.label = `IF條件 (${conditionCount}個 ${logic})`;
     }
     
     // 確保LINE節點有正確的useDataFrom設定
@@ -519,6 +523,222 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
             <small style={{color: '#666', fontSize: '12px'}}>
               💡 範例：欄位填 {'{'}message{'}'}, 條件選「包含」, 值填「你好」
             </small>
+          </div>
+        );
+
+      case 'if-condition':
+        return (
+          <div>
+            <h4>🔀 編輯IF條件</h4>
+            <div style={{
+              marginBottom: '20px',
+              padding: '12px',
+              background: '#404040',
+              borderRadius: '8px',
+              border: '1px solid #555'
+            }}>
+              <label style={{
+                fontSize: '13px', 
+                fontWeight: '600', 
+                color: '#e0e0e0',
+                display: 'block',
+                marginBottom: '8px'
+              }}>
+                🧠 邏輯關係
+              </label>
+              <select 
+                value={config.logic || 'AND'}
+                onChange={(e) => setConfig({...config, logic: e.target.value})}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #666',
+                  borderRadius: '6px',
+                  background: '#555',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  color: '#e0e0e0',
+                  outline: 'none'
+                }}
+              >
+                <option value="AND">🔗 AND - 所有條件都成立</option>
+                <option value="OR">🔀 OR - 任一條件成立</option>
+              </select>
+            </div>
+            
+            <div style={{marginBottom: '20px'}}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#e0e0e0',
+                marginBottom: '12px',
+                padding: '8px 0',
+                borderBottom: '2px solid #555'
+              }}>
+                📝 條件設定
+              </div>
+              {(config.conditions || [{field: '', operator: '==', value: ''}]).map((condition, index) => (
+                <div key={index} style={{
+                  border: '1px solid #555', 
+                  padding: '12px', 
+                  margin: '8px 0', 
+                  borderRadius: '6px', 
+                  background: '#404040',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{
+                      fontSize: '13px', 
+                      fontWeight: '600', 
+                      color: '#e0e0e0',
+                      background: '#555',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      border: '1px solid #666'
+                    }}>
+                      🔍 條件 {index + 1}
+                    </span>
+                    {(config.conditions || []).length > 1 && (
+                      <button 
+                        onClick={() => {
+                          const newConditions = (config.conditions || []).filter((_, i) => i !== index);
+                          setConfig({...config, conditions: newConditions});
+                        }}
+                        style={{
+                          background: '#dc3545', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '4px', 
+                          padding: '4px 8px', 
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✕ 刪除
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div style={{marginBottom: '8px'}}>
+                    <label style={{fontSize: '12px', color: '#b0b0b0', fontWeight: '500', display: 'block', marginBottom: '4px'}}>
+                      🏷️ 判斷欄位
+                    </label>
+                    <input 
+                      placeholder="例如: {'{message}'}, {'{userId}'}"
+                      value={condition.field || ''}
+                      onChange={(e) => {
+                        const newConditions = [...(config.conditions || [])];
+                        newConditions[index] = {...condition, field: e.target.value};
+                        setConfig({...config, conditions: newConditions});
+                      }}
+                      style={{
+                        width: '100%', 
+                        padding: '6px 10px', 
+                        border: '1px solid #666', 
+                        borderRadius: '4px',
+                        background: '#555',
+                        fontSize: '13px',
+                        color: '#e0e0e0',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{marginBottom: '8px'}}>
+                    <label style={{fontSize: '12px', color: '#b0b0b0', fontWeight: '500', display: 'block', marginBottom: '4px'}}>
+                      ⚙️ 運算子
+                    </label>
+                    <select 
+                      value={condition.operator || '=='}
+                      onChange={(e) => {
+                        const newConditions = [...(config.conditions || [])];
+                        newConditions[index] = {...condition, operator: e.target.value};
+                        setConfig({...config, conditions: newConditions});
+                      }}
+                      style={{
+                        width: '100%', 
+                        padding: '6px 10px', 
+                        border: '1px solid #666', 
+                        borderRadius: '4px',
+                        background: '#555',
+                        fontSize: '13px',
+                        color: '#e0e0e0',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="==">✅ 等於</option>
+                      <option value="!=">❌ 不等於</option>
+                      <option value="contains">🔍 包含</option>
+                      <option value="not_contains">🚫 不包含</option>
+                      <option value=">">⬆️ 大於</option>
+                      <option value="<">⬇️ 小於</option>
+                      <option value=">=">⬆️✅ 大於等於</option>
+                      <option value="<=">⬇️✅ 小於等於</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label style={{fontSize: '12px', color: '#b0b0b0', fontWeight: '500', display: 'block', marginBottom: '4px'}}>
+                      🎯 比較值
+                    </label>
+                    <input 
+                      placeholder="要比較的值"
+                      value={condition.value || ''}
+                      onChange={(e) => {
+                        const newConditions = [...(config.conditions || [])];
+                        newConditions[index] = {...condition, value: e.target.value};
+                        setConfig({...config, conditions: newConditions});
+                      }}
+                      style={{
+                        width: '100%', 
+                        padding: '6px 10px', 
+                        border: '1px solid #666', 
+                        borderRadius: '4px',
+                        background: '#555',
+                        fontSize: '13px',
+                        color: '#e0e0e0',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              <button 
+                onClick={() => {
+                  const newConditions = [...(config.conditions || []), {field: '', operator: '==', value: ''}];
+                  setConfig({...config, conditions: newConditions});
+                }}
+                style={{
+                  background: '#28a745', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '6px', 
+                  padding: '10px 20px', 
+                  marginTop: '12px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                ➕ 新增條件
+              </button>
+            </div>
+            
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              background: '#333',
+              borderRadius: '6px',
+              border: '1px solid #555'
+            }}>
+              <div style={{fontSize: '12px', color: '#b0b0b0', lineHeight: '1.4'}}>
+                💡 <strong>使用提示：</strong><br/>
+                • 可設定多個條件，使用 AND/OR 邏輯結合<br/>
+                • 範例：{'{message}'} 包含 「你好」<br/>
+                • 支援變數引用：{'{userId}'}, {'{timestamp}'} 等
+              </div>
+            </div>
           </div>
         );
 

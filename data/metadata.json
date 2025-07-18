@@ -4,7 +4,7 @@
     "name": "alan_line_msg",
     "description": "",
     "createdAt": "2025-07-11T01:51:03.388Z",
-    "updatedAt": "2025-07-18T01:35:09.096Z",
+    "updatedAt": "2025-07-18T09:15:26.922Z",
     "nodeCount": 12,
     "inputParams": [],
     "outputParams": []
@@ -135,6 +135,16 @@
     "createdAt": "2025-07-17T07:01:05.593Z",
     "updatedAt": "2025-07-17T07:01:05.593Z",
     "nodeCount": 0,
+    "inputParams": [],
+    "outputParams": []
+  },
+  "831e9617-f6f8-429d-a86c-c1026bf8b605": {
+    "id": "831e9617-f6f8-429d-a86c-c1026bf8b605",
+    "name": "樣式設定",
+    "description": "",
+    "createdAt": "2025-07-18T08:16:41.988Z",
+    "updatedAt": "2025-07-18T08:16:41.988Z",
+    "nodeCount": 11,
     "inputParams": [],
     "outputParams": []
   }

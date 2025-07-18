@@ -222,6 +222,93 @@ async function executeNode(node, context) {
       
       return { success: false, error: '條件判斷設定不完整' };
     
+    case 'if-condition':
+      const { conditions, logic } = node.data;
+      
+      if (!conditions || conditions.length === 0) {
+        return { success: false, error: 'IF條件設定不完整' };
+      }
+      
+      console.log(`🔀 IF條件判斷開始，邏輯: ${logic || 'AND'}`);
+      console.log(`📝 Context 資料:`, JSON.stringify(context, null, 2));
+      
+      const results = [];
+      
+      // 評估每個條件
+      for (let i = 0; i < conditions.length; i++) {
+        const cond = conditions[i];
+        let fieldValue;
+        
+        // 取得欄位值
+        if (cond.field && cond.field.startsWith('{') && cond.field.endsWith('}')) {
+          const key = cond.field.slice(1, -1);
+          fieldValue = context[key] || context._lastResult?.data?.[key];
+        } else {
+          fieldValue = cond.field;
+        }
+        
+        // 執行單個條件判斷
+        let conditionResult = false;
+        switch (cond.operator) {
+          case '>':
+            conditionResult = Number(fieldValue) > Number(cond.value);
+            break;
+          case '<':
+            conditionResult = Number(fieldValue) < Number(cond.value);
+            break;
+          case '>=':
+            conditionResult = Number(fieldValue) >= Number(cond.value);
+            break;
+          case '<=':
+            conditionResult = Number(fieldValue) <= Number(cond.value);
+            break;
+          case '==':
+          case '等於':
+            conditionResult = String(fieldValue) === String(cond.value);
+            break;
+          case '!=':
+          case '不等於':
+            conditionResult = String(fieldValue) !== String(cond.value);
+            break;
+          case 'contains':
+          case '包含':
+            conditionResult = String(fieldValue).includes(String(cond.value));
+            break;
+          case 'not_contains':
+          case '不包含':
+            conditionResult = !String(fieldValue).includes(String(cond.value));
+            break;
+          default:
+            conditionResult = false;
+        }
+        
+        results.push(conditionResult);
+        console.log(`🔍 條件 ${i + 1}: ${fieldValue} ${cond.operator} ${cond.value} = ${conditionResult}`);
+      }
+      
+      // 根據邏輯運算符計算最終結果
+      let finalResult;
+      if (logic === 'OR') {
+        finalResult = results.some(r => r === true);
+      } else { // 預設為 AND
+        finalResult = results.every(r => r === true);
+      }
+      
+      console.log(`🔀 IF條件最終結果 (${logic}): ${finalResult}`);
+      
+      return { 
+        success: true, 
+        data: finalResult,
+        details: {
+          conditions: conditions.map((cond, i) => ({
+            condition: `${cond.field} ${cond.operator} ${cond.value}`,
+            result: results[i]
+          })),
+          logic,
+          finalResult
+        }
+      };
+    
     case 'transform':
       const { script } = node.data;
       try {

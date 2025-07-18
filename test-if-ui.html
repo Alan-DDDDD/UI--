@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IF條件節點測試</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: #e0e0e0;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        
+        .node-preview {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            border: 3px solid #60a5fa;
+            color: #ffffff;
+            font-weight: 600;
+            min-width: 180px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            position: relative;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            display: inline-block;
+        }
+        
+        .node-preview::before {
+            content: '🔀';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            border: 2px solid #ffffff;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #404040;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .feature-list li::before {
+            content: '✅ ';
+            margin-right: 8px;
+        }
+        
+        .code-block {
+            background: #404040;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .highlight {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #90caf9;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            color: #1565c0;
+        }
+        
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔀 IF條件節點 - 功能展示</h1>
+        
+        <div class="demo-section">
+            <h2>🎨 節點外觀</h2>
+            <p>新的IF條件節點採用深藍色漸變設計，具有現代感的視覺效果：</p>
+            <div class="node-preview">
+                IF條件 (2個 AND)
+            </div>
+            <p>特色：</p>
+            <ul class="feature-list">
+                <li>深藍色漸變背景，專業美觀</li>
+                <li>右上角🔀圖標標識</li>
+                <li>懸停時有陰影和位移效果</li>
+                <li>動態標籤顯示條件數量和邏輯關係</li>
+            </ul>
+        </div>
+        
+        <div class="demo-section">
+            <h2>⚙️ 編輯界面優化</h2>
+            <div class="highlight">
+                <strong>🧠 邏輯關係選擇</strong><br>
+                採用藍色漸變背景，清楚標示AND/OR邏輯關係
+            </div>
+            
+            <div class="highlight">
+                <strong>🔍 條件設定區塊</strong><br>
+                每個條件都有獨立的卡片式設計，使用柔和的漸變背景取代刺眼的白色
+            </div>
+            
+            <div class="highlight">
+                <strong>💡 智能提示</strong><br>
+                黃色漸變提示框，提供詳細的使用說明和範例
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🚀 功能特色</h2>
+            <ul class="feature-list">
+                <li>支援多條件組合判斷</li>
+                <li>AND/OR邏輯運算</li>
+                <li>8種比較運算子（等於、不等於、包含、大於等）</li>
+                <li>變數引用支援 {userId}, {message} 等</li>
+                <li>視覺化條件編輯器</li>
+                <li>即時條件預覽</li>
+            </ul>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📝 使用範例</h2>
+            <p><strong>範例1：用戶身份驗證</strong></p>
+            <div class="code-block">
+條件1: {userId} 等於 "admin"
+邏輯: OR
+條件2: {userRole} 包含 "manager"
+            </div>
+            
+            <p><strong>範例2：訊息內容過濾</strong></p>
+            <div class="code-block">
+條件1: {message} 包含 "你好"
+邏輯: AND
+條件2: {timestamp} 大於 "1640995200000"
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🎯 後端執行邏輯</h2>
+            <p>IF條件節點在後端會：</p>
+            <ul class="feature-list">
+                <li>逐一評估每個條件</li>
+                <li>根據AND/OR邏輯計算最終結果</li>
+                <li>返回詳細的執行報告</li>
+                <li>支援變數替換和上下文引用</li>
+            </ul>
+            
+            <div class="code-block">
+// 執行結果範例
+{
+  "success": true,
+  "data": true,
+  "details": {
+    "conditions": [
+      {"condition": "{message} contains 你好", "result": true},
+      {"condition": "{userId} == U123456", "result": true}
+    ],
+    "logic": "AND",
+    "finalResult": true
+  }
+}
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🔧 如何使用</h2>
+            <ol>
+                <li>從節點庫拖拽「IF條件」到畫布</li>
+                <li>雙擊節點進入編輯模式</li>
+                <li>選擇邏輯關係（AND/OR）</li>
+                <li>添加條件並設定判斷欄位、運算子、比較值</li>
+                <li>儲存並連接到其他節點</li>
+            </ol>
+            
+            <button class="btn" onclick="alert('請在FlowBuilder主應用中測試IF條件節點！')">
+                🚀 開始使用
+            </button>
+        </div>
+    </div>
+</body>
+</html>

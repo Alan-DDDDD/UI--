@@ -6,6 +6,7 @@ function NodePanel({ onAddNode, compact = false }) {
     '基礎': [
       { type: 'http-request', icon: '🌐', label: 'API呼叫', description: '呼叫HTTP API' },
       { type: 'condition', icon: '❓', label: '條件判斷', description: '根據條件分支' },
+      { type: 'if-condition', icon: '🔀', label: 'IF條件', description: 'IF-ELSE條件分支' },
       { type: 'data-map', icon: '🔄', label: '資料映射', description: '轉換資料格式' },
       { type: 'notification', icon: '📢', label: '顯示訊息', description: '顯示通知訊息' }
     ],
@@ -32,6 +33,7 @@ function NodePanel({ onAddNode, compact = false }) {
     const defaultData = {
       'http-request': { label: 'API呼叫', url: '', method: 'GET' },
       'condition': { label: '條件判斷', field: '{message}', operator: 'contains', value: '你好' },
+      'if-condition': { label: 'IF條件', conditions: [{ field: '{message}', operator: 'contains', value: '你好' }], logic: 'AND' },
       'data-map': { label: '資料映射', name: '', mappings: [{from: '', to: ''}] },
       'line-push': { 
         label: 'LINE推送', 

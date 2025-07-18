@@ -27,6 +27,7 @@ import VariableInspector from './VariableInspector';
 import './WorkflowStatus.css';
 
 import './App.css';
+import { API_BASE_URL } from './config';
 
 // 自定義邊樣式
 const defaultEdgeOptions = {
@@ -584,7 +585,7 @@ function FlowWrapper() {
   const handleSaveWorkflow = async () => {
     try {
       if (workflowId) {
-        await fetch(`http://localhost:3001/api/workflows/${workflowId}`, {
+        await fetch(`${API_BASE_URL}/api/workflows/${workflowId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -597,7 +598,7 @@ function FlowWrapper() {
           })
         });
       } else {
-        const response = await fetch('http://localhost:3001/api/workflows', {
+        const response = await fetch(`${API_BASE_URL}/api/workflows`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -627,7 +628,7 @@ function FlowWrapper() {
     
     setIsExecuting(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/execute/${workflowId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/execute/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inputData })
@@ -708,8 +709,8 @@ function FlowWrapper() {
     try {
       // 同時獲取流程數據和元數據
       const [workflowResponse, metadataResponse] = await Promise.all([
-        fetch(`http://localhost:3001/api/workflows/${selectedWorkflowId}`),
-        fetch('http://localhost:3001/api/workflows')
+        fetch(`${API_BASE_URL}/api/workflows/${selectedWorkflowId}`),
+        fetch(`${API_BASE_URL}/api/workflows`)
       ]);
       
       const workflow = await workflowResponse.json();
@@ -762,7 +763,7 @@ function FlowWrapper() {
     }
     
     try {
-      const response = await fetch(`http://localhost:3001/api/debug/start/${workflowId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug/start/${workflowId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -786,7 +787,7 @@ function FlowWrapper() {
     if (!debugSession) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/debug/step/${debugSession.sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug/step/${debugSession.sessionId}`, {
         method: 'POST'
       });
       
@@ -808,7 +809,7 @@ function FlowWrapper() {
     if (!debugSession) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/debug/continue/${debugSession.sessionId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug/continue/${debugSession.sessionId}`, {
         method: 'POST'
       });
       
@@ -824,7 +825,7 @@ function FlowWrapper() {
     if (!debugSession) return;
     
     try {
-      await fetch(`http://localhost:3001/api/debug/pause/${debugSession.sessionId}`, {
+      await fetch(`${API_BASE_URL}/api/debug/pause/${debugSession.sessionId}`, {
         method: 'POST'
       });
       setDebugStatus('paused');
@@ -837,7 +838,7 @@ function FlowWrapper() {
     if (!debugSession) return;
     
     try {
-      await fetch(`http://localhost:3001/api/debug/stop/${debugSession.sessionId}`, {
+      await fetch(`${API_BASE_URL}/api/debug/stop/${debugSession.sessionId}`, {
         method: 'POST'
       });
       setDebugSession(null);
@@ -913,13 +914,13 @@ function FlowWrapper() {
                 onClick={async () => {
                   try {
                     if (workflowId) {
-                      await fetch(`http://localhost:3001/api/workflows/${workflowId}`, {
+                      await fetch(`${API_BASE_URL}/api/workflows/${workflowId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ nodes, edges, nodeGroups, inputParams, outputParams })
                       });
                     } else {
-                      const response = await fetch('http://localhost:3001/api/workflows', {
+                      const response = await fetch(`${API_BASE_URL}/api/workflows`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: '新流程', nodes, edges, nodeGroups, inputParams, outputParams })
