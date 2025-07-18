@@ -130,7 +130,23 @@ function FlowWrapper() {
   };
 
   const handleNodesChange = useCallback((changes) => {
-    onNodesChange(changes);
+    // 處理拖拽狀態
+    const updatedChanges = changes.map(change => {
+      if (change.type === 'position' && change.dragging !== undefined) {
+        return {
+          ...change,
+          item: change.item ? {
+            ...change.item,
+            className: change.dragging 
+              ? `${change.item.className || ''} dragging`.trim()
+              : (change.item.className || '').replace(' dragging', '')
+          } : change.item
+        };
+      }
+      return change;
+    });
+    
+    onNodesChange(updatedChanges);
     // 只有在用戶主動操作時才標記為未儲存，排除初始化和載入時的變更
     const isUserAction = changes.some(change => 
       change.type === 'position' || 
@@ -708,7 +724,8 @@ function FlowWrapper() {
         ...node,
         className: node.type === 'group' ? 'node-group' : `node-${node.data?.type || 'default'}`,
         sourcePosition: node.type === 'group' ? undefined : 'right',
-        targetPosition: node.type === 'group' ? undefined : 'left'
+        targetPosition: node.type === 'group' ? undefined : 'left',
+        style: node.style
       }));
       
       setNodes(nodesWithType);
@@ -1016,7 +1033,10 @@ function FlowWrapper() {
               style: { ...node.style, ...getNodeStyle(node) }
             };
           })}
-          edges={edges}
+          edges={edges.map(edge => ({
+            ...edge,
+            className: edge.data?.active === false ? 'paused-edge' : ''
+          }))}
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}

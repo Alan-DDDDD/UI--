@@ -905,96 +905,189 @@ label {
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
-/* React Flow 深色主題樣式 */
+
+
+
+
 .react-flow__node {
   background: #404040 !important;
   border: 2px solid #666 !important;
   color: #e0e0e0 !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  padding: 10px !important;
+  min-width: 120px !important;
+  transition: border-color 0.2s ease !important;
 }
 
-/* 群組節點樣式 */
-.react-flow__node[data-type="group"] {
-  background: rgba(64, 64, 64, 0.1) !important;
-  border: 2px dashed #666 !important;
-  z-index: -1 !important;
+.react-flow__node:hover {
+  border-color: #888 !important;
 }
 
-.react-flow__node.selected {
-  border-color: #4CAF50 !important;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3) !important;
-}
-
-/* HTTP請求節點 - 藍色 */
 .react-flow__node.node-http-request {
-  background: #1e3a8a !important;
-  border-color: #3b82f6 !important;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+  border-color: #60a5fa !important;
+  color: white !important;
 }
 
-/* 條件判斷節點 - 橙色 */
+.react-flow__node.node-http-request:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-http-request:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
 .react-flow__node.node-condition {
-  background: #fdba74 !important;
-  border-color: #f97316 !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, #ea580c, #f97316) !important;
+  border-color: #fb923c !important;
+  color: white !important;
 }
 
-/* LINE相關節點 - 綠色 */
+.react-flow__node.node-condition:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-condition:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
+.react-flow__node.node-if-condition {
+  background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+  border-color: #c084fc !important;
+  color: white !important;
+}
+
+.react-flow__node.node-if-condition:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-if-condition:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
 .react-flow__node.node-line-reply,
 .react-flow__node.node-line-push,
 .react-flow__node.node-line-carousel {
-  background: #166534 !important;
-  border-color: #22c55e !important;
+  background: linear-gradient(135deg, #166534, #22c55e) !important;
+  border-color: #4ade80 !important;
+  color: white !important;
 }
 
-/* Webhook觸發節點 - 紫色 */
-.react-flow__node.node-webhook-trigger {
-  background: #7c2d92 !important;
-  border-color: #a855f7 !important;
+.react-flow__node.node-line-reply:hover,
+.react-flow__node.node-line-push:hover,
+.react-flow__node.node-line-carousel:hover {
+  border-color: #ffffff !important;
 }
 
-/* 程式進入點節點 - 綠色 */
-.react-flow__node.node-program-entry {
-  background: #059669 !important;
-  border-color: #10b981 !important;
-  font-weight: bold !important;
+.react-flow__node.node-line-reply:hover::before,
+.react-flow__node.node-line-push:hover::before,
+.react-flow__node.node-line-carousel:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
 }
 
-/* 資料映射節點 - 青色 */
 .react-flow__node.node-data-map {
-  background: #0e7490 !important;
-  border-color: #06b6d4 !important;
+  background: linear-gradient(135deg, #0e7490, #06b6d4) !important;
+  border-color: #22d3ee !important;
+  color: white !important;
 }
 
-/* 通知節點 - 黃色 */
+.react-flow__node.node-data-map:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-data-map:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
 .react-flow__node.node-notification {
-  background: #a16207 !important;
-  border-color: #eab308 !important;
-  color: #000 !important;
+  background: linear-gradient(135deg, #a16207, #eab308) !important;
+  border-color: #facc15 !important;
+  color: white !important;
 }
 
+.react-flow__node.node-notification:hover {
+  border-color: #ffffff !important;
+}
 
+.react-flow__node.node-notification:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
 
-/* 流程引用節點 - 特殊樣式 */
-.react-flow__node.node-workflow-reference,
+.react-flow__node.node-webhook-trigger {
+  background: linear-gradient(135deg, #7c2d92, #a855f7) !important;
+  border-color: #c084fc !important;
+  color: white !important;
+}
+
+.react-flow__node.node-webhook-trigger:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-webhook-trigger:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
+.react-flow__node.node-program-entry {
+  background: linear-gradient(135deg, #059669, #10b981) !important;
+  border-color: #34d399 !important;
+  color: white !important;
+}
+
+.react-flow__node.node-program-entry:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-program-entry:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
 .react-flow__node.node-existing-workflow {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  border: 3px solid #8b5cf6 !important;
-  color: #ffffff !important;
-  font-weight: bold !important;
-  min-width: 220px !important;
-  text-align: center !important;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
-  position: relative !important;
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border-color: #8b5cf6 !important;
+  color: white !important;
 }
 
-.react-flow__node.node-workflow-reference::before,
-.react-flow__node.node-existing-workflow::before {
-  content: '🔗';
+.react-flow__node.node-existing-workflow:hover {
+  border-color: #ffffff !important;
+}
+
+.react-flow__node.node-existing-workflow:hover::before {
+  width: 24px !important;
+  height: 24px !important;
+  top: -12px !important;
+  right: -12px !important;
+}
+
+.react-flow__node.node-http-request::before {
+  content: '🌐';
   position: absolute;
   top: -8px;
   right: -8px;
-  background: #8b5cf6;
+  background: #3b82f6;
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -1003,41 +1096,188 @@ label {
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  border: 2px solid #ffffff;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__node.node-workflow-reference:hover,
-.react-flow__node.node-existing-workflow:hover {
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4) !important;
-  border-color: #a855f7 !important;
+.react-flow__node.node-condition::before {
+  content: '❓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #f97316;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__node.node-workflow-reference.selected,
-.react-flow__node.node-existing-workflow.selected {
-  border-color: #c084fc !important;
-  box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.3) !important;
+.react-flow__node.node-if-condition::before {
+  content: '🔀';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #a855f7;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__node:hover {
-  border-color: #4CAF50 !important;
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
+.react-flow__node.node-line-reply::before {
+  content: '💬';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #22c55e;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__node.selected {
-  border-color: #2196F3 !important;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4) !important;
+.react-flow__node.node-line-push::before {
+  content: '📱';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #22c55e;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__handle {
-  background: #4CAF50 !important;
-  border: 2px solid #2E7D32 !important;
-  width: 10px !important;
-  height: 10px !important;
+.react-flow__node.node-line-carousel::before {
+  content: '🎠';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #22c55e;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
-.react-flow__handle:hover {
-  background: #66BB6A !important;
-  transform: scale(1.2);
+.react-flow__node.node-data-map::before {
+  content: '🔄';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #06b6d4;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
+}
+
+.react-flow__node.node-notification::before {
+  content: '📢';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #eab308;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
+}
+
+.react-flow__node.node-webhook-trigger::before {
+  content: '🔗';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #a855f7;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
+}
+
+.react-flow__node.node-program-entry::before {
+  content: '🚀';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
+}
+
+.react-flow__node.node-existing-workflow::before {
+  content: '🔗';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #764ba2;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 2px solid white;
+  transition: all 0.2s ease;
 }
 
 .react-flow__controls {
@@ -1060,6 +1300,8 @@ label {
 .react-flow__edge-path {
   stroke-width: 3px !important;
   cursor: pointer;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
 }
 
 .react-flow__edge:hover .react-flow__edge-path {
@@ -1067,9 +1309,18 @@ label {
   stroke-width: 4px !important;
 }
 
+.react-flow__edge.paused-edge:hover .react-flow__edge-path {
+  stroke: #FFD700 !important;
+  stroke-width: 4px !important;
+}
+
 .react-flow__edge.paused .react-flow__edge-path {
   stroke: #FFD700 !important;
   stroke-dasharray: 5,5 !important;
+}
+
+.react-flow__edge .react-flow__edge-path {
+  fill: none !important;
 }
 
 /* 暫停邊的樣式覆蓋 */
@@ -2610,6 +2861,53 @@ label {
 
 .primary-btn:hover {
   background: #45a049 !important;
+}
+
+/* IF條件節點編輯器專用樣式 */
+.if-condition-editor {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.if-condition-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.if-condition-editor::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 3px;
+}
+
+.if-condition-editor::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 3px;
+}
+
+.if-condition-editor::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* 條件項目動畫效果 */
+.condition-item-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.condition-item-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.condition-item-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.condition-item-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
 }
 
 
