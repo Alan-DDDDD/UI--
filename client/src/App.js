@@ -22,6 +22,8 @@ import WebhookUrlDialog from './WebhookUrlDialog';
 import ExecutionResults from './ExecutionResults';
 import ExecuteDialog from './ExecuteDialog';
 import WorkflowStatus from './WorkflowStatus';
+import DebugToolbar from './DebugToolbar';
+import VariableInspector from './VariableInspector';
 import './WorkflowStatus.css';
 
 import './App.css';
@@ -73,6 +75,15 @@ function FlowWrapper() {
   const [executionResults, setExecutionResults] = useState(null);
   const [showExecutionResults, setShowExecutionResults] = useState(false);
   const [showExecuteDialog, setShowExecuteDialog] = useState(false);
+  
+  // 調試狀態
+  const [debugSession, setDebugSession] = useState(null);
+  const [debugStatus, setDebugStatus] = useState('stopped');
+  const [currentExecutingNode, setCurrentExecutingNode] = useState(null);
+  const [breakpoints, setBreakpoints] = useState(new Set());
+  const [debugVariables, setDebugVariables] = useState({});
+  const [showVariableInspector, setShowVariableInspector] = useState(false);
+  const [callStack, setCallStack] = useState([]);
 
   // 通知系統
   const showNotification = (type, title, message = '') => {
@@ -360,6 +371,68 @@ function FlowWrapper() {
       setSelectedNodes([]);
     }
   }, []);
+
+  // 斷點管理
+  const toggleBreakpoint = useCallback((nodeId) => {
+    setBreakpoints(prev => {
+      const newBreakpoints = new Set(prev);
+      if (newBreakpoints.has(nodeId)) {
+        newBreakpoints.delete(nodeId);
+      } else {
+        newBreakpoints.add(nodeId);
+      }
+      return newBreakpoints;
+    });
+  }, []);
+
+  // 節點右鍵選單
+  const onNodeContextMenu = useCallback((event, node) => {
+    event.preventDefault();
+    const hasBreakpoint = breakpoints.has(node.id);
+    
+    // 創建右鍵選單
+    const menu = document.createElement('div');
+    menu.className = 'node-context-menu';
+    menu.style.cssText = `
+      position: fixed;
+      top: ${event.clientY}px;
+      left: ${event.clientX}px;
+      background: #2d2d2d;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 8px 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    
+    const breakpointBtn = document.createElement('button');
+    breakpointBtn.textContent = hasBreakpoint ? '🔴 移除斷點' : '🔴 設置斷點';
+    breakpointBtn.style.cssText = `
+      width: 100%;
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: #e0e0e0;
+      cursor: pointer;
+      text-align: left;
+    `;
+    breakpointBtn.onclick = () => {
+      toggleBreakpoint(node.id);
+      document.body.removeChild(menu);
+    };
+    
+    menu.appendChild(breakpointBtn);
+    document.body.appendChild(menu);
+    
+    const closeMenu = () => {
+      if (document.body.contains(menu)) {
+        document.body.removeChild(menu);
+      }
+      document.removeEventListener('click', closeMenu);
+    };
+    
+    setTimeout(() => document.addEventListener('click', closeMenu), 100);
+  }, [breakpoints, toggleBreakpoint]);
 
   const createGroup = () => {
     if (selectedNodes.length < 2) {
@@ -664,6 +737,114 @@ function FlowWrapper() {
     setHasUnsavedChanges(false);
   };
 
+  // 調試控制函數
+  const startDebugSession = async () => {
+    if (!workflowId) {
+      showNotification('warning', '請先儲存流程');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/debug/start/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputData: {},
+          breakpoints: Array.from(breakpoints),
+          stepMode: true
+        })
+      });
+      
+      const session = await response.json();
+      setDebugSession(session);
+      setDebugStatus('ready');
+      setShowVariableInspector(true); // 自動顯示變數檢視器
+      showNotification('success', '調試會話已啟動');
+    } catch (error) {
+      showNotification('error', '啟動調試失敗', error.message);
+    }
+  };
+
+  const stepExecution = async () => {
+    if (!debugSession) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/debug/step/${debugSession.sessionId}`, {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      setCurrentExecutingNode(result.currentNode);
+      setDebugVariables(result.variables || {});
+      setDebugStatus(result.status);
+      setCallStack(result.callStack || []);
+      
+      if (result.message) {
+        showNotification('info', result.message);
+      }
+    } catch (error) {
+      showNotification('error', '單步執行失敗', error.message);
+    }
+  };
+
+  const continueExecution = async () => {
+    if (!debugSession) return;
+    
+    try {
+      const response = await fetch(`http://localhost:3001/api/debug/continue/${debugSession.sessionId}`, {
+        method: 'POST'
+      });
+      
+      const result = await response.json();
+      setDebugStatus(result.status);
+      setCurrentExecutingNode(result.currentNode);
+    } catch (error) {
+      showNotification('error', '繼續執行失敗', error.message);
+    }
+  };
+
+  const pauseExecution = async () => {
+    if (!debugSession) return;
+    
+    try {
+      await fetch(`http://localhost:3001/api/debug/pause/${debugSession.sessionId}`, {
+        method: 'POST'
+      });
+      setDebugStatus('paused');
+    } catch (error) {
+      showNotification('error', '暫停執行失敗', error.message);
+    }
+  };
+
+  const stopExecution = async () => {
+    if (!debugSession) return;
+    
+    try {
+      await fetch(`http://localhost:3001/api/debug/stop/${debugSession.sessionId}`, {
+        method: 'POST'
+      });
+      setDebugSession(null);
+      setDebugStatus('stopped');
+      setCurrentExecutingNode(null);
+      setDebugVariables({});
+      setCallStack([]);
+      // 不自動關閉面板，讓用戶手動關閉
+    } catch (error) {
+      showNotification('error', '停止執行失敗', error.message);
+    }
+  };
+
+
+
+  // 節點樣式更新（主要用於其他樣式，調試樣式由 CSS 類別處理）
+  const getNodeStyle = (node) => {
+    const baseStyle = {};
+    
+    // 其他自定義樣式可以在這裡添加
+    
+    return baseStyle;
+  };
+
   return (
     <div className="app">
       {/* 側邊欄切換按鈕 */}
@@ -786,7 +967,16 @@ function FlowWrapper() {
           onOpenManual={() => setShowUserManual(true)}
           workflowId={workflowId}
           onShowWebhookUrl={() => setShowWebhookUrl(true)}
+          debugSession={debugSession}
+          onShowVariableInspector={() => setShowVariableInspector(true)}
+          onStartDebug={startDebugSession}
+          isDebugging={debugSession !== null}
+          debugControls={{
+            onStop: stopExecution
+          }}
         />
+        
+
         
 
         
@@ -809,12 +999,29 @@ function FlowWrapper() {
         */}
         
         <ReactFlow
-          nodes={nodes}
+          nodes={nodes.map(node => {
+            let className = node.className || `node-${node.data?.type || 'default'}`;
+            
+            // 添加調試狀態的 className
+            if (breakpoints.has(node.id)) {
+              className += ' debug-breakpoint';
+            }
+            if (currentExecutingNode === node.id) {
+              className += ' debug-executing';
+            }
+            
+            return {
+              ...node,
+              className,
+              style: { ...node.style, ...getNodeStyle(node) }
+            };
+          })}
           edges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
+          onNodeContextMenu={onNodeContextMenu}
           onEdgeContextMenu={onEdgeContextMenu}
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -916,6 +1123,20 @@ function FlowWrapper() {
           onClose={() => setShowExecuteDialog(false)}
           onExecute={handleExecuteWorkflow}
           inputParams={inputParams}
+        />
+        
+        <VariableInspector
+          isOpen={showVariableInspector}
+          onClose={() => setShowVariableInspector(false)}
+          variables={debugVariables}
+          context={debugVariables}
+          isDebugging={debugSession !== null}
+          debugControls={{
+            onStep: stepExecution,
+            onContinue: continueExecution,
+            onPause: pauseExecution,
+            onStop: stopExecution
+          }}
         />
       </div>
     </div>

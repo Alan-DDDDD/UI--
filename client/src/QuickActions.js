@@ -12,7 +12,12 @@ function QuickActions({
   onOpenSettings,
   onOpenManual,
   workflowId,
-  onShowWebhookUrl
+  onShowWebhookUrl,
+  debugSession,
+  onShowVariableInspector,
+  onStartDebug,
+  isDebugging,
+  debugControls = {}
 }) {
   const [showTooltip, setShowTooltip] = useState(null);
 
@@ -37,6 +42,12 @@ function QuickActions({
               onValidateWorkflow();
             }
             break;
+          case 'd':
+            event.preventDefault();
+            if (!isExecuting && workflowId && !isDebugging) {
+              onStartDebug();
+            }
+            break;
           case 'h':
             event.preventDefault();
             onToggleSmartHints();
@@ -56,7 +67,7 @@ function QuickActions({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onSaveWorkflow, onExecuteWorkflow, onValidateWorkflow, onToggleSmartHints, onOpenSettings, onOpenManual, isExecuting]);
+  }, [onSaveWorkflow, onExecuteWorkflow, onValidateWorkflow, onToggleSmartHints, onOpenSettings, onOpenManual, onStartDebug, isExecuting, workflowId, isDebugging]);
 
   const actions = [
     {
@@ -87,6 +98,15 @@ function QuickActions({
       disabled: isExecuting
     },
     {
+      id: 'debug',
+      icon: isDebugging ? '⏹️' : '🐛',
+      label: isDebugging ? '停止調試' : '開始調試',
+      shortcut: 'Ctrl+D',
+      onClick: isDebugging ? debugControls.onStop : onStartDebug,
+      highlight: isDebugging,
+      disabled: !workflowId || isExecuting
+    },
+    {
       id: 'smart-hints',
       icon: smartHintsEnabled ? '💡' : '🔅',
       label: smartHintsEnabled ? '關閉智能提示' : '開啟智能提示',
@@ -113,6 +133,7 @@ function QuickActions({
       highlight: false,
       disabled: !workflowId
     },
+
     {
       id: 'manual',
       icon: '📖',
@@ -147,13 +168,13 @@ function QuickActions({
   return (
     <div className="quick-actions-toolbar">
       {/* 主要操作 */}
-      {actions.slice(0, 3).map((action, index) => renderActionButton(action, index))}
+      {actions.slice(0, 4).map((action, index) => renderActionButton(action, index))}
       
       {/* 分隔線 */}
       <div className="action-separator"></div>
       
       {/* 輔助功能 */}
-      {actions.slice(3).map((action, index) => renderActionButton(action, index + 3))}
+      {actions.slice(4).map((action, index) => renderActionButton(action, index + 4))}
       
       {isExecuting && (
         <>

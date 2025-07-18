@@ -2499,6 +2499,54 @@ label {
 
 
 
+/* 調試節點樣式 */
+.react-flow__node.debug-breakpoint {
+  background: #FF6B6B !important;
+  color: #FFFFFF !important;
+  border-color: #FF4757 !important;
+}
+
+.react-flow__node.debug-executing {
+  border: 3px solid #FFD700 !important;
+  box-shadow: 0 0 15px #FFD700 !important;
+  animation: debugPulse 1.5s infinite !important;
+  z-index: 10 !important;
+}
+
+@keyframes debugPulse {
+  0% { box-shadow: 0 0 15px #FFD700; }
+  50% { box-shadow: 0 0 25px #FFD700, 0 0 35px #FFD700; }
+  100% { box-shadow: 0 0 15px #FFD700; }
+}
+
+/* 節點右鍵選單 */
+.node-context-menu {
+  position: fixed;
+  background: #2d2d2d;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  padding: 4px 0;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  min-width: 140px;
+}
+
+.node-context-menu button {
+  width: 100%;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.node-context-menu button:hover {
+  background: #404040;
+}
+
 /* 響應式設計 */
 @media (max-width: 768px) {
   .workflow-status-panel {

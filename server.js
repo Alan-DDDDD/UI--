@@ -8,6 +8,28 @@ const path = require('path');
 const app = express();
 const PORT = 3001;
 
+// 執行狀態管理
+class ExecutionState {
+  constructor(workflowId, inputData) {
+    this.sessionId = uuidv4();
+    this.workflowId = workflowId;
+    this.status = 'ready'; // ready, running, paused, stopped, completed
+    this.currentNodeIndex = 0;
+    this.currentNodeId = null;
+    this.context = { ...inputData };
+    this.results = [];
+    this.breakpoints = new Set();
+    this.stepMode = false;
+    this.variables = {};
+    this.callStack = [];
+    this.parentSession = null;
+    this.depth = 0;
+    this.nodes = [];
+  }
+}
+
+const executionSessions = new Map();
+
 app.use(cors());
 app.use(express.json());
 
@@ -1629,6 +1651,166 @@ app.get('/debug/workflow/:workflowId', (req, res) => {
   }
 });
 
+// 調試API端點
+// 開始調試執行
+app.post('/api/debug/start/:workflowId', async (req, res) => {
+  const { workflowId } = req.params;
+  const { inputData = {}, breakpoints = [], stepMode = true } = req.body;
+  
+  const workflow = workflows[workflowId];
+  if (!workflow) {
+    return res.status(404).json({ error: '工作流程不存在' });
+  }
+  
+  const session = new ExecutionState(workflowId, inputData);
+  session.breakpoints = new Set(breakpoints);
+  session.stepMode = stepMode;
+  session.nodes = workflow.nodes;
+  
+  executionSessions.set(session.sessionId, session);
+  
+  res.json({
+    sessionId: session.sessionId,
+    status: session.status,
+    currentNode: null,
+    totalNodes: workflow.nodes.length
+  });
+});
+
+// 單步執行
+app.post('/api/debug/step/:sessionId', async (req, res) => {
+  const session = executionSessions.get(req.params.sessionId);
+  if (!session) return res.status(404).json({ error: '執行會話不存在' });
+  
+  try {
+    const result = await executeNextNode(session);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 繼續執行
+app.post('/api/debug/continue/:sessionId', async (req, res) => {
+  const session = executionSessions.get(req.params.sessionId);
+  if (!session) return res.status(404).json({ error: '執行會話不存在' });
+  
+  try {
+    session.status = 'running';
+    const result = await continueExecution(session);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 暫停執行
+app.post('/api/debug/pause/:sessionId', async (req, res) => {
+  const session = executionSessions.get(req.params.sessionId);
+  if (!session) return res.status(404).json({ error: '執行會話不存在' });
+  
+  session.status = 'paused';
+  res.json({ status: 'paused', currentNode: session.currentNodeId });
+});
+
+// 停止執行
+app.post('/api/debug/stop/:sessionId', async (req, res) => {
+  const session = executionSessions.get(req.params.sessionId);
+  if (!session) return res.status(404).json({ error: '執行會話不存在' });
+  
+  executionSessions.delete(req.params.sessionId);
+  res.json({ status: 'stopped' });
+});
+
+// 獲取執行狀態
+app.get('/api/debug/status/:sessionId', (req, res) => {
+  const session = executionSessions.get(req.params.sessionId);
+  if (!session) return res.status(404).json({ error: '執行會話不存在' });
+  
+  res.json({
+    status: session.status,
+    currentNode: session.currentNodeId,
+    variables: session.variables,
+    results: session.results,
+    callStack: session.callStack
+  });
+});
+
+// 核心執行邏輯
+async function executeNextNode(session) {
+  const workflow = workflows[session.workflowId];
+  if (!workflow || session.currentNodeIndex >= workflow.nodes.length) {
+    session.status = 'completed';
+    return { status: 'completed', message: '流程執行完成' };
+  }
+  
+  const node = workflow.nodes[session.currentNodeIndex];
+  session.currentNodeId = node.id;
+  
+  // 檢查斷點
+  if (session.breakpoints.has(node.id) && session.status === 'running') {
+    session.status = 'paused';
+    return {
+      status: 'paused',
+      currentNode: node.id,
+      message: `在斷點處暫停: ${node.data.label}`
+    };
+  }
+  
+  // 執行節點
+  const result = await executeNode(node, session.context);
+  session.results.push({ nodeId: node.id, result });
+  
+  // 更新上下文
+  if (result.success) {
+    session.context[node.id] = result.data;
+    session.context._lastResult = result;
+  } else {
+    session.context._lastResult = result;
+  }
+  
+  session.variables = { ...session.context };
+  
+  // 處理子流程
+  if (node.data.type === 'workflow-reference') {
+    return await handleSubworkflow(session, node, result);
+  }
+  
+  session.currentNodeIndex++;
+  
+  if (session.stepMode) {
+    session.status = 'paused';
+  }
+  
+  return {
+    status: 'completed',
+    currentNode: session.currentNodeId,
+    result,
+    variables: session.variables
+  };
+}
+
+async function handleSubworkflow(session, node, result) {
+  // Step Over 子流程 (預設行為)
+  session.currentNodeIndex++;
+  return {
+    status: session.stepMode ? 'paused' : 'running',
+    currentNode: session.currentNodeId,
+    result,
+    message: `子流程執行完成: ${node.data.workflowName}`
+  };
+}
+
+async function continueExecution(session) {
+  while (session.currentNodeIndex < session.nodes.length && session.status === 'running') {
+    const result = await executeNextNode(session);
+    if (result.status === 'paused' || result.status === 'completed') {
+      return result;
+    }
+  }
+  return { status: session.status };
+}
+
 app.listen(PORT, () => {
   console.log(`伺服器運行在 http://localhost:${PORT}`);
   console.log('測試API已啟用:');
@@ -1639,6 +1821,9 @@ app.listen(PORT, () => {
   console.log('\n調試端點:');
   console.log('- GET /debug/workflows - 查看所有工作流程');
   console.log('- GET /debug/workflow/:workflowId - 查看特定工作流程');
+  console.log('- POST /api/debug/start/:workflowId - 開始調試執行');
+  console.log('- POST /api/debug/step/:sessionId - 單步執行');
+  console.log('- POST /api/debug/continue/:sessionId - 繼續執行');
   console.log('\nWebhook端點已啟用:');
   console.log('- POST /webhook/:workflowId - 一般Webhook接收');
   console.log('- POST /webhook/line/:workflowId - LINE Webhook接收');

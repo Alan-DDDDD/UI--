@@ -1,0 +1,57 @@
+.debug-toolbar {
+  position: absolute;
+  top: 60px;
+  left: 20px;
+  background: #2d2d2d;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 12px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.debug-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.debug-controls button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #404040;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.debug-controls button:hover:not(:disabled) {
+  background: #505050;
+}
+
+.debug-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.debug-info {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: #ccc;
+  margin-left: 12px;
+}
+
+.debug-btn.start {
+  background: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.debug-btn.start:hover {
+  background: #45a049;
+}

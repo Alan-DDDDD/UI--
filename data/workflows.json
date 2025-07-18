@@ -86,7 +86,7 @@
           "y": 411.593168443281
         },
         "data": {
-          "label": "LINE回覆: 你好，我收到你的訊息是:\n\"{...",
+          "label": "LINE回覆: Hi，我收到你的訊息是:\n\"{...",
           "type": "line-reply",
           "name": "",
           "url": "https://api.line.me/v2/bot/message/reply",
@@ -101,7 +101,7 @@
             "messages": [
               {
                 "type": "text",
-                "text": "你好，我收到你的訊息是:\n\"{message}\""
+                "text": "Hi，我收到你的訊息是:\n\"{message}\""
               }
             ]
           },
@@ -465,14 +465,13 @@
         "id": "reactflow__edge-condition-1752198752087-line-carousel-1752211392228",
         "selected": false,
         "data": {
-          "active": false
+          "active": true
         },
         "style": {
-          "stroke": "#FFD700",
-          "strokeWidth": 3,
-          "strokeDasharray": "5,5"
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
         },
-        "animated": false
+        "animated": true
       },
       {
         "source": "webhook-trigger-1752217035067",
@@ -488,13 +487,14 @@
         "targetHandle": null,
         "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530",
         "data": {
-          "active": true
+          "active": false
         },
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#FFD700",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
         },
-        "animated": true,
+        "animated": false,
         "selected": false
       },
       {
