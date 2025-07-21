@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, showNotification }) {
   const [workflows, setWorkflows] = useState([]);
@@ -16,7 +17,7 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, show
 
   const loadWorkflows = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/workflows');
+      const response = await axios.get(`${API_BASE_URL}/api/workflows`);
       setWorkflows(response.data.workflows);
     } catch (error) {
       console.error('載入流程列表失敗:', error);
@@ -27,7 +28,7 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, show
     if (!newWorkflowName.trim()) return;
     
     try {
-      const response = await axios.post('http://localhost:3001/api/workflows', {
+      const response = await axios.post(`${API_BASE_URL}/api/workflows`, {
         name: newWorkflowName,
         description: newWorkflowDesc,
         nodes: [],
@@ -54,7 +55,7 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, show
     if (!window.confirm('確定要刪除這個流程嗎？')) return;
     
     try {
-      await axios.delete(`http://localhost:3001/api/workflows/${workflowId}`);
+      await axios.delete(`${API_BASE_URL}/api/workflows/${workflowId}`);
       loadWorkflows();
     } catch (error) {
       console.error('刪除流程失敗:', error);
@@ -65,7 +66,7 @@ function WorkflowList({ onSelectWorkflow, onNewWorkflow, currentWorkflowId, show
     if (selectedWorkflows.length < 2 || !combinedWorkflowName.trim()) return;
     
     try {
-      const response = await axios.post('http://localhost:3001/api/workflows/combine', {
+      const response = await axios.post(`${API_BASE_URL}/api/workflows/combine`, {
         name: combinedWorkflowName,
         workflowIds: selectedWorkflows
       });

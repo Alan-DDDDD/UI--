@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ConfirmDialog from './ConfirmDialog';
+import { API_BASE_URL } from './config';
 
 // 參數映射編輯器組件
 function ParamMappingEditor({ workflowId, paramMappings, onMappingsChange }) {
@@ -17,7 +18,7 @@ function ParamMappingEditor({ workflowId, paramMappings, onMappingsChange }) {
   
   const loadTargetWorkflow = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/workflows/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/workflows/${id}`);
       setTargetWorkflow(response.data);
       
       // 提取可用變數（從常用上下文和輸入參數）
@@ -71,7 +72,7 @@ function ParamMappingEditor({ workflowId, paramMappings, onMappingsChange }) {
     
     setIsValidating(true);
     try {
-      const response = await axios.post(`http://localhost:3001/api/workflows/${workflowId}/validate-params`, {
+      const response = await axios.post(`${API_BASE_URL}/api/workflows/${workflowId}/validate-params`, {
         paramMappings,
         sourceContext: {
           userId: 'U1234567890',
@@ -247,7 +248,7 @@ function WorkflowSelector({ selectedWorkflowId, onSelectWorkflow, currentWorkflo
   
   const loadWorkflows = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/workflows');
+      const response = await axios.get(`${API_BASE_URL}/api/workflows`);
       // 過濾掉當前流程，避免自我引用
       const availableWorkflows = response.data.workflows.filter(w => w.id !== currentWorkflowId);
       setWorkflows(availableWorkflows);
@@ -296,7 +297,7 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
 
   const loadTokens = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/tokens');
+      const response = await axios.get(`${API_BASE_URL}/api/tokens`);
       setTokens(response.data.tokens);
     } catch (error) {
       console.error('載入 Token 失敗:', error);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 function TokenManager() {
   const [tokens, setTokens] = useState([]);
@@ -12,7 +13,7 @@ function TokenManager() {
 
   const loadTokens = async () => {
     try {
-      const response = await axios.get('http://localhost:3001/api/tokens');
+      const response = await axios.get(`${API_BASE_URL}/api/tokens`);
       setTokens(response.data.tokens);
     } catch (error) {
       console.error('載入 Token 失敗:', error);
@@ -23,7 +24,7 @@ function TokenManager() {
     if (!newToken.key || !newToken.token) return;
     
     try {
-      await axios.post('http://localhost:3001/api/tokens', newToken);
+      await axios.post(`${API_BASE_URL}/api/tokens`, newToken);
       setShowDialog(false);
       setNewToken({ key: '', name: '', token: '' });
       loadTokens();
@@ -36,7 +37,7 @@ function TokenManager() {
     if (!window.confirm('確定要刪除這個 Token 嗎？')) return;
     
     try {
-      await axios.delete(`http://localhost:3001/api/tokens/${key}`);
+      await axios.delete(`${API_BASE_URL}/api/tokens/${key}`);
       loadTokens();
     } catch (error) {
       console.error('刪除 Token 失敗:', error);

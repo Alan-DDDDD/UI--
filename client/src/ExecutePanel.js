@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChanges, setHasUnsavedChanges, nodeGroups, inputParams, outputParams, showNotification }) {
   const [inputData, setInputData] = useState('{}');
@@ -10,7 +11,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
     try {
       if (workflowId) {
         // 更新現有流程
-        await axios.put(`http://localhost:3001/api/workflows/${workflowId}`, {
+        await axios.put(`${API_BASE_URL}/api/workflows/${workflowId}`, {
           nodes,
           edges,
           nodeGroups,
@@ -21,7 +22,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
         setHasUnsavedChanges(false);
       } else {
         // 創建新流程
-        const response = await axios.post('http://localhost:3001/api/workflows', {
+        const response = await axios.post(`${API_BASE_URL}/api/workflows`, {
           name: '新流程',
           description: '',
           nodes,
@@ -52,7 +53,7 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
       await saveWorkflow();
       
       const response = await axios.post(
-        `http://localhost:3001/api/execute/${workflowId}`,
+        `${API_BASE_URL}/api/execute/${workflowId}`,
         { inputData: JSON.parse(inputData) }
       );
       setResults(response.data);
@@ -153,8 +154,8 @@ function ExecutePanel({ nodes, edges, workflowId, setWorkflowId, hasUnsavedChang
           <div style={{marginTop: '10px', fontSize: '12px'}}>
             <strong>🔗 Webhook網址：</strong>
             <div style={{background: '#f8f9fa', padding: '8px', borderRadius: '4px', marginTop: '5px'}}>
-              <div>一般: <code>http://localhost:3001/webhook/{workflowId}</code></div>
-              <div>LINE: <code>http://localhost:3001/webhook/line/{workflowId}</code></div>
+              <div>一般: <code>{API_BASE_URL}/webhook/{workflowId}</code></div>
+              <div>LINE: <code>{API_BASE_URL}/webhook/line/{workflowId}</code></div>
             </div>
           </div>
         </div>

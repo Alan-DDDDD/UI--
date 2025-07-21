@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import './WebhookUrlDialog.css';
+import { API_BASE_URL } from './config';
 
 function WebhookUrlDialog({ isOpen, onClose, workflowId }) {
   const [copied, setCopied] = useState('');
 
   if (!isOpen || !workflowId) return null;
 
-  const baseUrl = 'http://localhost:3001';
+  const baseUrl = API_BASE_URL;
   const generalUrl = `${baseUrl}/webhook/${workflowId}`;
   const lineUrl = `${baseUrl}/webhook/line/${workflowId}`;
 

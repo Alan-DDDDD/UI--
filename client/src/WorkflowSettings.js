@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from './config';
 
 function WorkflowSettings({ 
   isOpen, 
@@ -134,12 +135,12 @@ function WorkflowSettings({
                     <div className="webhook-url-display">
                       <input 
                         type="text" 
-                        value={`http://localhost:3001/webhook/${workflowId}`}
+                        value={`${API_BASE_URL}/webhook/${workflowId}`}
                         readOnly
                         className="webhook-url-readonly"
                       />
                       <button 
-                        onClick={() => navigator.clipboard.writeText(`http://localhost:3001/webhook/${workflowId}`)}
+                        onClick={() => navigator.clipboard.writeText(`${API_BASE_URL}/webhook/${workflowId}`)}
                         className="copy-webhook-btn"
                       >
                         📋
@@ -152,12 +153,12 @@ function WorkflowSettings({
                     <div className="webhook-url-display">
                       <input 
                         type="text" 
-                        value={`http://localhost:3001/webhook/line/${workflowId}`}
+                        value={`${API_BASE_URL}/webhook/line/${workflowId}`}
                         readOnly
                         className="webhook-url-readonly"
                       />
                       <button 
-                        onClick={() => navigator.clipboard.writeText(`http://localhost:3001/webhook/line/${workflowId}`)}
+                        onClick={() => navigator.clipboard.writeText(`${API_BASE_URL}/webhook/line/${workflowId}`)}
                         className="copy-webhook-btn"
                       >
                         📋
