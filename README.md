@@ -27,16 +27,20 @@
 
 ## 🚀 快速開始
 
-### 1. 環境準備
-```bash
-# 安裝後端依賴
-npm install
+### 線上體驗
+- **前端應用**: https://alan-ddddd.github.io/UI--
+- **後端API**: https://ui-eight-alpha.vercel.app
+- **Webhook**: https://ui-eight-alpha.vercel.app/webhook/line/{workflowId}
 
-# 安裝前端依賴
-cd client && npm install
+### 本地開發
+
+#### 1. 環境準備
+```bash
+# 安裝所有依賴
+npm run install-all
 ```
 
-### 2. 啟動系統
+#### 2. 啟動系統
 ```bash
 # 開發模式（同時啟動前後端）
 npm run dev
@@ -46,7 +50,7 @@ npm start          # 後端 (port 3001)
 cd client && npm start  # 前端 (port 3000)
 ```
 
-### 3. 開始使用
+#### 3. 本地訪問
 - 前端介面：http://localhost:3000
 - 後端API：http://localhost:3001
 - Webhook端點：http://localhost:3001/webhook/line/{workflowId}

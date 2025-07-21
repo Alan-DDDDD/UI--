@@ -33,6 +33,16 @@ const executionSessions = new Map();
 app.use(cors());
 app.use(express.json());
 
+// 健康檢查端點
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // 資料檔案路徑
 const DATA_DIR = path.join(__dirname, 'data');
 const WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
