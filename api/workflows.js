@@ -40,7 +40,7 @@ function saveData(filePath, data) {
   }
 }
 
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   // 設置 CORS headers
   Object.keys(corsHeaders).forEach(key => {
     res.setHeader(key, corsHeaders[key]);
