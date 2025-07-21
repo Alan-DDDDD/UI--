@@ -1,7 +1,7 @@
 // 部署測試腳本
 const axios = require('axios');
 
-const API_URL = 'https://ui-flow-api.vercel.app';
+const API_URL = 'https://ui-eight-alpha.vercel.app';
 
 async function testDeployment() {
   console.log('🧪 測試 Vercel 部署...');
