@@ -2,6 +2,7 @@
   "name": "flowbuilder-client",
   "version": "1.0.0",
   "private": true,
+  "homepage": "https://Alan-DDDDD.github.io/UI--",
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,6 +29,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "proxy": "http://localhost:3001"
+  }
 }
