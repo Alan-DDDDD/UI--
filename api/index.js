@@ -29,7 +29,10 @@ class ExecutionState {
 
 const executionSessions = new Map();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://alan-ddddd.github.io', 'http://localhost:3000'],
+  credentials: true
+}));
 app.use(express.json());
 
 // 資料檔案路徑
