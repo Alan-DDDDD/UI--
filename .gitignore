@@ -3,7 +3,7 @@ node_modules/
 client/node_modules/
 
 # Production builds
-client/build/
+# client/build/
 dist/
 
 # Environment variables
