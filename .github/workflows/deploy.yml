@@ -21,11 +21,7 @@ jobs:
       run: cd client && npm ci
         
     - name: Build
-      run: |
-        cd client
-        npm run build
-      env:
-        PUBLIC_URL: /UI--
+      run: cd client && npm run build
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
