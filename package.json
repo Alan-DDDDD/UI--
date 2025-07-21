@@ -4,6 +4,7 @@
   "description": "流程UI介面驅動API串接系統",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "nodemon server.js",
     "client": "cd client && npm start",
