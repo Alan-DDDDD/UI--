@@ -527,6 +527,88 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
           </div>
         );
 
+      case 'switch':
+        return (
+          <div>
+            <h4>🔀 編輯Switch分支</h4>
+            <div style={{marginBottom: '15px'}}>
+              <label>🎯 判斷欄位：</label>
+              <input 
+                placeholder="例如: {message}, {status}"
+                value={config.switchField || ''}
+                onChange={(e) => setConfig({...config, switchField: e.target.value})}
+                style={{width: '100%', marginTop: '5px'}}
+              />
+            </div>
+            
+            <div style={{marginBottom: '15px'}}>
+              <label>📝 Case選項：</label>
+              {(config.cases || []).map((caseItem, index) => (
+                <div key={index} style={{display: 'flex', gap: '5px', margin: '5px 0', alignItems: 'center'}}>
+                  <input 
+                    placeholder="值"
+                    value={caseItem.value || ''}
+                    onChange={(e) => {
+                      const newCases = [...(config.cases || [])];
+                      newCases[index] = {...caseItem, value: e.target.value};
+                      setConfig({...config, cases: newCases});
+                    }}
+                    style={{flex: 1}}
+                  />
+                  <span>→</span>
+                  <input 
+                    placeholder="標籤"
+                    value={caseItem.label || ''}
+                    onChange={(e) => {
+                      const newCases = [...(config.cases || [])];
+                      newCases[index] = {...caseItem, label: e.target.value};
+                      setConfig({...config, cases: newCases});
+                    }}
+                    style={{flex: 1}}
+                  />
+                  <button 
+                    onClick={() => {
+                      const newCases = (config.cases || []).filter((_, i) => i !== index);
+                      setConfig({...config, cases: newCases});
+                    }}
+                    style={{background: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', padding: '5px'}}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button 
+                onClick={() => {
+                  const newCases = [...(config.cases || []), {value: '', label: ''}];
+                  setConfig({...config, cases: newCases});
+                }}
+                style={{background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', padding: '8px 15px', marginTop: '5px'}}
+              >
+                ➕ 新增Case
+              </button>
+            </div>
+            
+            <div>
+              <label>🛡️ 預設分支：</label>
+              <input 
+                placeholder="當沒有匹配的Case時執行"
+                value={config.defaultCase || ''}
+                onChange={(e) => setConfig({...config, defaultCase: e.target.value})}
+                style={{width: '100%', marginTop: '5px'}}
+              />
+            </div>
+            
+            <div style={{marginTop: '15px', padding: '10px', background: '#333', borderRadius: '4px'}}>
+              <small style={{color: '#b0b0b0'}}>
+                💡 <strong>使用說明：</strong><br/>
+                • 根據欄位值選擇不同的執行分支<br/>
+                • 每個Case值都會成為一個分支<br/>
+                • 可使用變數引用：{'{message}'}, {'{status}'}
+              </small>
+            </div>
+          </div>
+        );
+      
       case 'if-condition':
         return (
           <div>

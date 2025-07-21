@@ -27,6 +27,7 @@ import VariableInspector from './VariableInspector';
 import './WorkflowStatus.css';
 
 import './App.css';
+import './BranchEdges.css';
 import { API_BASE_URL } from './config';
 
 // 自定義邊樣式
@@ -44,6 +45,18 @@ const pausedEdgeStyle = {
   stroke: '#FFD700',
   strokeWidth: 3,
   strokeDasharray: '5,5',
+};
+
+// 分支邊樣式
+const branchEdgeStyles = {
+  true: {
+    stroke: '#4CAF50',
+    strokeWidth: 3,
+  },
+  false: {
+    stroke: '#f44336',
+    strokeWidth: 3,
+  }
 };
 
 const initialNodes = [];
@@ -160,9 +173,67 @@ function FlowWrapper() {
   }, [onNodesChange]);
 
   const onConnect = useCallback((params) => {
-    setEdges((eds) => addEdge({...params, ...defaultEdgeOptions, data: { active: true }}, eds));
+    // 檢查來源節點是否為條件節點
+    const sourceNode = nodes.find(n => n.id === params.source);
+    const isConditionNode = sourceNode && (sourceNode.data.type === 'condition' || sourceNode.data.type === 'if-condition');
+    const isSwitchNode = sourceNode && sourceNode.data.type === 'switch';
+    
+    // 為條件節點的邊設定預設分支
+    let edgeData = { active: true };
+    let edgeStyle = { ...defaultEdgeOptions.style };
+    let edgeLabel = '';
+    
+    if (isConditionNode) {
+      // 檢查是否已經有TRUE分支
+      const existingEdges = edges.filter(e => e.source === params.source);
+      const hasTrueBranch = existingEdges.some(e => e.data?.branch === 'true' || !e.data?.branch);
+      
+      // 如果已經有TRUE分支，新邊設為FALSE分支
+      const branch = hasTrueBranch ? 'false' : 'true';
+      edgeData.branch = branch;
+      edgeLabel = branch === 'true' ? '✅' : '❌';
+      edgeStyle = {
+        ...edgeStyle,
+        stroke: branch === 'true' ? '#4CAF50' : '#f44336',
+        strokeWidth: 4,
+        strokeDasharray: '8,4'
+      };
+    } else if (isSwitchNode) {
+      // Switch節點的分支處理
+      const existingEdges = edges.filter(e => e.source === params.source);
+      const cases = sourceNode.data.cases || [];
+      const usedBranches = existingEdges.map(e => e.data?.branch).filter(Boolean);
+      
+      // 找到下一個可用的case或default
+      let nextBranch = 'default';
+      for (const caseItem of cases) {
+        if (!usedBranches.includes(caseItem.value)) {
+          nextBranch = caseItem.value;
+          break;
+        }
+      }
+      
+      edgeData.branch = nextBranch;
+      edgeLabel = nextBranch === 'default' ? '🛡️' : nextBranch;
+      edgeStyle = {
+        ...edgeStyle,
+        stroke: nextBranch === 'default' ? '#FF9800' : '#2196F3',
+        strokeWidth: 4,
+        strokeDasharray: '8,4'
+      };
+    }
+    
+    const newEdge = {
+      ...params, 
+      ...defaultEdgeOptions, 
+      data: edgeData,
+      style: edgeStyle,
+      label: edgeLabel
+    };
+    
+    setEdges((eds) => addEdge(newEdge, eds));
     setHasUnsavedChanges(true);
-  }, [setEdges]);
+  }, [setEdges, nodes, edges]);
 
   // 邊的右鍵選單處理
   const onEdgeContextMenu = useCallback((event, edge) => {
@@ -179,7 +250,81 @@ function FlowWrapper() {
       padding: 8px 0;
       z-index: 1000;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      min-width: 160px;
     `;
+    
+    // 檢查來源節點是否為條件節點
+    const sourceNode = nodes.find(n => n.id === edge.source);
+    const isConditionNode = sourceNode && (sourceNode.data.type === 'condition' || sourceNode.data.type === 'if-condition');
+    const isSwitchNode = sourceNode && sourceNode.data.type === 'switch';
+    
+    // 分支設定按鈕（條件節點和Switch節點）
+    if (isConditionNode || isSwitchNode) {
+      const branchBtn = document.createElement('button');
+      const currentBranch = edge.data?.branch || 'true';
+      if (isConditionNode) {
+        branchBtn.textContent = currentBranch === 'true' ? '🟢 TRUE分支' : '🔴 FALSE分支';
+      } else {
+        branchBtn.textContent = `🔀 ${currentBranch}分支`;
+      }
+      branchBtn.style.cssText = `
+        width: 100%;
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        color: #e0e0e0;
+        cursor: pointer;
+        text-align: left;
+      `;
+      branchBtn.onmouseover = () => branchBtn.style.background = '#404040';
+      branchBtn.onmouseout = () => branchBtn.style.background = 'none';
+      branchBtn.onclick = () => {
+        if (isConditionNode) {
+          const newBranch = currentBranch === 'true' ? 'false' : 'true';
+          setEdges((eds) => eds.map((e) => 
+            e.id === edge.id 
+              ? { 
+                  ...e, 
+                  data: { ...e.data, branch: newBranch },
+                  label: newBranch === 'true' ? '✅' : '❌',
+                  style: {
+                    ...e.style,
+                    stroke: newBranch === 'true' ? '#4CAF50' : '#f44336',
+                    strokeWidth: 4,
+                    strokeDasharray: '8,4'
+                  }
+                }
+              : e
+          ));
+        } else {
+          // Switch節點的分支切換
+          const cases = sourceNode.data.cases || [];
+          const allBranches = [...cases.map(c => c.value), 'default'];
+          const currentIndex = allBranches.indexOf(currentBranch);
+          const nextIndex = (currentIndex + 1) % allBranches.length;
+          const newBranch = allBranches[nextIndex];
+          
+          setEdges((eds) => eds.map((e) => 
+            e.id === edge.id 
+              ? { 
+                  ...e, 
+                  data: { ...e.data, branch: newBranch },
+                  label: newBranch === 'default' ? '🛡️' : newBranch,
+                  style: {
+                    ...e.style,
+                    stroke: newBranch === 'default' ? '#FF9800' : '#2196F3',
+                    strokeWidth: 4,
+                    strokeDasharray: '8,4'
+                  }
+                }
+              : e
+          ));
+        }
+        setHasUnsavedChanges(true);
+        document.body.removeChild(menu);
+      };
+      menu.appendChild(branchBtn);
+    }
     
     const toggleBtn = document.createElement('button');
     toggleBtn.textContent = edge.data?.active !== false ? '⏸️ 暫停路徑' : '▶️ 啟用路徑';
@@ -278,6 +423,8 @@ function FlowWrapper() {
       const defaultData = {
         'http-request': { label: 'API呼叫', url: '', method: 'GET' },
         'condition': { label: '條件判斷', field: '{message}', operator: 'contains', value: '你好' },
+        'if-condition': { label: 'IF條件', conditions: [{field: '{message}', operator: 'contains', value: '你好'}], logic: 'AND' },
+        'switch': { label: 'Switch分支', switchField: '{message}', cases: [{value: '你好', label: '問候'}, {value: '再見', label: '告別'}], defaultCase: '其他' },
         'data-map': { label: '資料映射', name: '', mappings: [{from: '', to: ''}] },
         'line-push': { 
           label: 'LINE推送', 
@@ -1034,10 +1181,19 @@ function FlowWrapper() {
               style: { ...node.style, ...getNodeStyle(node) }
             };
           })}
-          edges={edges.map(edge => ({
-            ...edge,
-            className: edge.data?.active === false ? 'paused-edge' : ''
-          }))}
+          edges={edges.map(edge => {
+            let className = edge.data?.active === false ? 'paused-edge' : '';
+            
+            // 為分支邊添加樣式
+            if (edge.data?.branch) {
+              className += ` branch-${edge.data.branch}`;
+            }
+            
+            return {
+              ...edge,
+              className: className.trim()
+            };
+          })}
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}

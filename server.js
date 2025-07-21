@@ -206,7 +206,11 @@ async function executeNode(node, context) {
         }
         
         console.log(`🔍 條件判斷: ${fieldValue} ${operator} ${value} = ${result}`);
-        return { success: true, data: result };
+        return { 
+          success: true, 
+          data: result,
+          branch: result ? 'true' : 'false' // 添加分支信息
+        };
       }
       
       // 舊版條件判斷：支援自由表達式
@@ -299,6 +303,7 @@ async function executeNode(node, context) {
       return { 
         success: true, 
         data: finalResult,
+        branch: finalResult ? 'true' : 'false', // 添加分支信息
         details: {
           conditions: conditions.map((cond, i) => ({
             condition: `${cond.field} ${cond.operator} ${cond.value}`,
@@ -306,6 +311,48 @@ async function executeNode(node, context) {
           })),
           logic,
           finalResult
+        }
+      };
+    
+    case 'switch':
+      const { switchField, cases, defaultCase } = node.data;
+      
+      if (!switchField) {
+        return { success: false, error: 'Switch欄位設定不完整' };
+      }
+      
+      console.log(`🔀 Switch判斷開始`);
+      console.log(`📝 Context 資料:`, JSON.stringify(context, null, 2));
+      
+      // 取得欄位值
+      let switchValue;
+      if (switchField.startsWith('{') && switchField.endsWith('}')) {
+        const key = switchField.slice(1, -1);
+        switchValue = context[key] || context._lastResult?.data?.[key];
+      } else {
+        switchValue = switchField;
+      }
+      
+      console.log(`🔍 Switch值: ${switchValue}`);
+      
+      // 尋找匹配的case
+      let matchedCase = null;
+      if (cases && cases.length > 0) {
+        matchedCase = cases.find(c => String(c.value) === String(switchValue));
+        console.log(`🔍 可用Cases: ${cases.map(c => c.value).join(', ')}`);
+      }
+      
+      const branch = matchedCase ? String(matchedCase.value) : 'default';
+      console.log(`🔀 Switch匹配分支: ${branch} (匹配到: ${matchedCase ? 'Yes' : 'No'})`);
+      
+      return {
+        success: true,
+        data: switchValue,
+        branch: String(branch),
+        details: {
+          switchValue,
+          matchedCase: matchedCase?.value || 'default',
+          availableCases: cases?.map(c => c.value) || []
         }
       };
     
@@ -1007,29 +1054,72 @@ app.post('/api/execute/:workflowId', async (req, res) => {
         }
       }
     } else {
-      // 一般流程執行邏輯
+      // 一般流程執行邏輯 - 支援條件分支
       const activeEdges = workflow.edges.filter(edge => edge.data?.active !== false);
       
-      for (const node of workflow.nodes) {
-        const hasActiveConnection = activeEdges.some(edge => edge.target === node.id) || 
-                                   workflow.nodes.indexOf(node) === 0;
+      // 使用圖遍歷而非線性執行
+      const executedNodes = new Set();
+      const executeFromNode = async (startNodeId) => {
+        if (executedNodes.has(startNodeId)) return;
         
-        if (!hasActiveConnection && workflow.nodes.indexOf(node) !== 0) {
-          console.log(`⏸️ 跳過節點 ${node.id}，因為沒有啟用的連接`);
-          continue;
-        }
+        const node = workflow.nodes.find(n => n.id === startNodeId);
+        if (!node) return;
         
+        executedNodes.add(startNodeId);
         const result = await executeNode(node, context);
         results.push({ nodeId: node.id, result });
         
         if (result.success) {
           context[node.id] = result.data;
           context._lastResult = result;
+          
+          // 處理條件分支和Switch分支
+          if ((node.data.type === 'condition' || node.data.type === 'if-condition' || node.data.type === 'switch') && result.branch) {
+            console.log(`🔀 條件節點 ${node.id} 結果: ${result.branch}`);
+            
+            // 找到對應分支的邊
+            const branchEdges = activeEdges.filter(edge => {
+              if (edge.source !== node.id) return false;
+              
+              if (node.data.type === 'switch') {
+                return edge.data?.branch === result.branch;
+              } else {
+                return edge.data?.branch === result.branch || 
+                       (!edge.data?.branch && result.branch === 'true');
+              }
+            });
+            
+            console.log(`🔀 找到 ${branchEdges.length} 條 ${result.branch} 分支`);
+            console.log(`🔍 所有邊:`, activeEdges.filter(e => e.source === node.id).map(e => `${e.target}(${e.data?.branch || 'no-branch'})`));
+            
+            // 執行對應分支的節點
+            for (const edge of branchEdges) {
+              console.log(`▶️ 執行分支節點: ${edge.target}`);
+              await executeFromNode(edge.target);
+            }
+          } else {
+            // 非條件節點，執行所有連接的節點
+            const nextEdges = activeEdges.filter(edge => edge.source === node.id);
+            for (const edge of nextEdges) {
+              await executeFromNode(edge.target);
+            }
+          }
         } else {
           context._lastResult = result;
-          // 當有節點失敗時，整個流程應該標記為失敗
-          return res.json({ success: false, results, finalContext: context, error: result.error });
+          console.log(`❌ 節點 ${node.id} 執行失敗: ${result.error}`);
         }
+      };
+      
+      // 找到起始節點（沒有輸入邊的節點）
+      const startNodes = workflow.nodes.filter(node => 
+        !activeEdges.some(edge => edge.target === node.id)
+      );
+      
+      console.log(`🚀 找到 ${startNodes.length} 個起始節點`);
+      
+      // 從每個起始節點開始執行
+      for (const startNode of startNodes) {
+        await executeFromNode(startNode.id);
       }
     }
     
@@ -1039,6 +1129,7 @@ app.post('/api/execute/:workflowId', async (req, res) => {
       success: !hasFailedNode, 
       results, 
       finalContext: context,
+      executedNodes: results.length,
       error: hasFailedNode ? '流程執行中有節點失敗' : undefined
     });
   } catch (error) {
@@ -1654,6 +1745,64 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                           context[actionNode.id] = actionResult.data;
                           context._lastResult = actionResult;
                           
+                          // 如果是 Switch 節點，繼續執行匹配的分支
+                          if (actionNode.data.type === 'switch' && actionResult.branch) {
+                            console.log(`🔀 Switch節點執行完成，繼續執行分支: ${actionResult.branch}`);
+                            
+                            // 找到對應分支的邊
+                            const branchEdges = workflow.edges.filter(branchEdge => 
+                              branchEdge.source === actionNode.id && 
+                              branchEdge.data?.active !== false &&
+                              branchEdge.data?.branch === actionResult.branch
+                            );
+                            
+                            console.log(`🔀 找到 ${branchEdges.length} 條 ${actionResult.branch} 分支`);
+                            
+                            // 執行對應分支的節點
+                            for (const branchEdge of branchEdges) {
+                              const branchNode = workflow.nodes.find(n => n.id === branchEdge.target);
+                              if (branchNode) {
+                                console.log(`▶️ 執行Switch分支節點: ${branchNode.id}`);
+                                const branchResult = await executeNode(branchNode, context);
+                                results.push({ nodeId: branchNode.id, result: branchResult });
+                                
+                                if (branchResult.success) {
+                                  context[branchNode.id] = branchResult.data;
+                                  context._lastResult = branchResult;
+                                  
+                                  // 如果是條件節點且結果為 true，繼續執行連接的節點
+                                  if (branchNode.data.type === 'condition' && branchResult.data === true) {
+                                    console.log(`✅ 條件節點 ${branchNode.id} 為 true，繼續執行連接的節點`);
+                                    
+                                    const conditionActionEdges = workflow.edges.filter(e => 
+                                      e.source === branchNode.id && e.data?.active !== false
+                                    );
+                                    
+                                    for (const conditionActionEdge of conditionActionEdges) {
+                                      const conditionActionNode = workflow.nodes.find(n => n.id === conditionActionEdge.target);
+                                      if (conditionActionNode) {
+                                        console.log(`▶️ 執行條件連接的節點: ${conditionActionNode.id}`);
+                                        const conditionActionResult = await executeNode(conditionActionNode, context);
+                                        results.push({ nodeId: conditionActionNode.id, result: conditionActionResult });
+                                        
+                                        if (conditionActionResult.success) {
+                                          context[conditionActionNode.id] = conditionActionResult.data;
+                                          context._lastResult = conditionActionResult;
+                                        } else {
+                                          console.log(`❌ 條件連接節點 ${conditionActionNode.id} 執行失敗: ${conditionActionResult.error}`);
+                                          context._lastResult = conditionActionResult;
+                                        }
+                                      }
+                                    }
+                                  }
+                                } else {
+                                  console.log(`❌ Switch分支節點 ${branchNode.id} 執行失敗: ${branchResult.error}`);
+                                  context._lastResult = branchResult;
+                                }
+                              }
+                            }
+                          }
+                          
                           // 如果是 LINE reply 或 carousel 且成功，標記 replyToken 已使用
                           if ((actionNode.data.type === 'line-reply' || actionNode.data.type === 'line-carousel') && 
                               actionResult.data && actionResult.data.mode !== 'push') {
@@ -1692,6 +1841,64 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                     if (defaultResult.success) {
                       context[defaultNode.id] = defaultResult.data;
                       context._lastResult = defaultResult;
+                      
+                      // 如果是 Switch 節點，繼續執行匹配的分支
+                      if (defaultNode.data.type === 'switch' && defaultResult.branch) {
+                        console.log(`🔀 Switch節點執行完成，繼續執行分支: ${defaultResult.branch}`);
+                        
+                        // 找到對應分支的邊
+                        const branchEdges = workflow.edges.filter(branchEdge => 
+                          branchEdge.source === defaultNode.id && 
+                          branchEdge.data?.active !== false &&
+                          branchEdge.data?.branch === defaultResult.branch
+                        );
+                        
+                        console.log(`🔀 找到 ${branchEdges.length} 條 ${defaultResult.branch} 分支`);
+                        
+                        // 執行對應分支的節點
+                        for (const branchEdge of branchEdges) {
+                          const branchNode = workflow.nodes.find(n => n.id === branchEdge.target);
+                          if (branchNode) {
+                            console.log(`▶️ 執行Switch分支節點: ${branchNode.id}`);
+                            const branchResult = await executeNode(branchNode, context);
+                            results.push({ nodeId: branchNode.id, result: branchResult });
+                            
+                            if (branchResult.success) {
+                              context[branchNode.id] = branchResult.data;
+                              context._lastResult = branchResult;
+                              
+                              // 如果是條件節點且結果為 true，繼續執行連接的節點
+                              if (branchNode.data.type === 'condition' && branchResult.data === true) {
+                                console.log(`✅ 條件節點 ${branchNode.id} 為 true，繼續執行連接的節點`);
+                                
+                                const conditionActionEdges = workflow.edges.filter(e => 
+                                  e.source === branchNode.id && e.data?.active !== false
+                                );
+                                
+                                for (const conditionActionEdge of conditionActionEdges) {
+                                  const conditionActionNode = workflow.nodes.find(n => n.id === conditionActionEdge.target);
+                                  if (conditionActionNode) {
+                                    console.log(`▶️ 執行條件連接的節點: ${conditionActionNode.id}`);
+                                    const conditionActionResult = await executeNode(conditionActionNode, context);
+                                    results.push({ nodeId: conditionActionNode.id, result: conditionActionResult });
+                                    
+                                    if (conditionActionResult.success) {
+                                      context[conditionActionNode.id] = conditionActionResult.data;
+                                      context._lastResult = conditionActionResult;
+                                    } else {
+                                      console.log(`❌ 條件連接節點 ${conditionActionNode.id} 執行失敗: ${conditionActionResult.error}`);
+                                      context._lastResult = conditionActionResult;
+                                    }
+                                  }
+                                }
+                              }
+                            } else {
+                              console.log(`❌ Switch分支節點 ${branchNode.id} 執行失敗: ${branchResult.error}`);
+                              context._lastResult = branchResult;
+                            }
+                          }
+                        }
+                      }
                     } else {
                       // 節點執行失敗時，記錄錯誤
                       console.log(`❌ 預設節點 ${defaultNode.id} 執行失敗: ${defaultResult.error}`);

@@ -1,23 +1,21 @@
 {
-  "name": "flow-ui-client",
+  "name": "flowbuilder-client",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://alan-ddddd.github.io/UI--",
   "dependencies": {
-    "axios": "^1.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "reactflow": "^11.10.1"
+    "reactflow": "^11.10.1",
+    "axios": "^1.6.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --watchAll=false",
-    "test:watch": "react-scripts test",
-    "test:coverage": "react-scripts test --coverage --watchAll=false",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1"
   },
   "browserslist": {
     "production": [
@@ -31,17 +29,5 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^14.5.1",
-    "gh-pages": "^6.3.0"
-  },
-  "jest": {
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx}",
-      "!src/index.js",
-      "!src/reportWebVitals.js"
-    ]
-  }
+  "proxy": "http://localhost:3001"
 }
