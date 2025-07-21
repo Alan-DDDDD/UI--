@@ -2,8 +2,8 @@
 node_modules/
 client/node_modules/
 
-# Production builds
-client/build/
+# Production builds (local development)
+# client/build/ - commented out for GitHub Actions
 dist/
 
 # Environment variables
