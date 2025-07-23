@@ -1,3 +1,4 @@
+// 從 server.js 複製完整的後端邏輯
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -35,8 +36,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// 資料檔案路徑
-const DATA_DIR = path.join(__dirname, '..', 'data');
+// 健康檢查端點
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 資料檔案路徑 - Vercel 環境適配
+const DATA_DIR = process.env.VERCEL ? '/tmp/data' : path.join(__dirname, '..', 'data');
 const WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
 const METADATA_FILE = path.join(DATA_DIR, 'metadata.json');
 const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
@@ -69,6 +80,40 @@ function saveData(filePath, data) {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error(`儲存 ${filePath} 失敗:`, error);
+  }
+}
+
+// 執行單個節點 - 簡化版本，只包含核心功能
+async function executeNode(node, context) {
+  const nodeType = node.data.type || node.type;
+  switch (nodeType) {
+    case 'http-request':
+      const { method, url, headers, body } = node.data;
+      try {
+        const response = await axios({
+          method: method || 'GET',
+          url,
+          headers: headers || {},
+          data: body
+        });
+        return { success: true, data: response.data };
+      } catch (error) {
+        return { success: false, error: error.message };
+      }
+    
+    case 'notification':
+      const { message } = node.data;
+      return { 
+        success: true, 
+        data: { 
+          type: 'notification',
+          message,
+          timestamp: new Date().toISOString()
+        }
+      };
+    
+    default:
+      return { success: false, error: '未知的節點類型' };
   }
 }
 
@@ -193,6 +238,93 @@ app.delete('/api/workflows/:workflowId', (req, res) => {
   saveData(METADATA_FILE, workflowMetadata);
   
   res.json({ success: true, message: '工作流程已刪除' });
+});
+
+// 執行工作流程
+app.post('/api/execute/:workflowId', async (req, res) => {
+  const { workflowId } = req.params;
+  const { inputData } = req.body;
+  
+  const workflow = workflows[workflowId];
+  if (!workflow) {
+    return res.status(404).json({ error: '工作流程不存在' });
+  }
+  
+  let context = { ...inputData };
+  const results = [];
+  
+  try {
+    for (const node of workflow.nodes) {
+      const result = await executeNode(node, context);
+      results.push({ nodeId: node.id, result });
+      
+      if (result.success) {
+        context[node.id] = result.data;
+        context._lastResult = result;
+      } else {
+        context._lastResult = result;
+        break;
+      }
+    }
+    
+    const hasFailedNode = results.some(r => !r.result.success);
+    res.json({ 
+      success: !hasFailedNode, 
+      results, 
+      finalContext: context,
+      executedNodes: results.length,
+      error: hasFailedNode ? '流程執行中有節點失敗' : undefined
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// LINE Webhook端點
+app.post('/webhook/line/:workflowId', async (req, res) => {
+  const { workflowId } = req.params;
+  const lineData = req.body;
+  
+  console.log(`📱 收到LINE Webhook: ${workflowId}`);
+  
+  if (lineData.events && lineData.events.length > 0) {
+    for (const event of lineData.events) {
+      const eventData = {
+        type: event.type,
+        userId: event.source?.userId,
+        message: event.message?.text,
+        replyToken: event.replyToken,
+        timestamp: event.timestamp
+      };
+      
+      const workflow = workflows[workflowId];
+      if (workflow) {
+        try {
+          let context = { ...eventData };
+          const results = [];
+          
+          for (const node of workflow.nodes) {
+            const result = await executeNode(node, context);
+            results.push({ nodeId: node.id, result });
+            
+            if (result.success) {
+              context[node.id] = result.data;
+              context._lastResult = result;
+            } else {
+              context._lastResult = result;
+              break;
+            }
+          }
+          
+          console.log('🚀 LINE Webhook觸發工作流程執行完成');
+        } catch (error) {
+          console.error('❌ LINE Webhook執行失敗:', error);
+        }
+      }
+    }
+  }
+  
+  res.status(200).json({ message: 'ok' });
 });
 
 module.exports = app;

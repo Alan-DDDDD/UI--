@@ -3,8 +3,8 @@ node_modules/
 client/node_modules/
 
 # Production builds
-# client/build/
 dist/
+# client/build/ - 需要被 GitHub Pages 部署
 
 # Environment variables
 .env
