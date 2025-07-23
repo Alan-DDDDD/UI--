@@ -69,12 +69,18 @@ let tokens = loadData(TOKENS_FILE, {});
 // 載入資料函數
 function loadData(filePath, defaultValue) {
   try {
+    console.log(`🔍 嘗試載入: ${filePath}`);
     if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      console.log(`✅ 成功載入: ${filePath}, 資料筆數: ${Object.keys(data).length}`);
+      return data;
+    } else {
+      console.log(`⚠️ 檔案不存在: ${filePath}`);
     }
   } catch (error) {
-    console.error(`載入 ${filePath} 失敗:`, error);
+    console.error(`❌ 載入 ${filePath} 失敗:`, error.message);
   }
+  console.log(`🔄 使用預設值: ${filePath}`);
   return defaultValue;
 }
 
