@@ -46,11 +46,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 資料檔案路徑 - Vercel 環境適配
-const DATA_DIR = process.env.VERCEL ? '/tmp/data' : path.join(__dirname, '..', 'data');
+// 資料檔案路徑
+const DATA_DIR = path.join(__dirname, '..', 'data');
 const WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
 const METADATA_FILE = path.join(DATA_DIR, 'metadata.json');
 const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
+
+console.log('📁 資料目錄:', DATA_DIR);
+console.log('📄 檔案存在:', {
+  workflows: fs.existsSync(WORKFLOWS_FILE),
+  metadata: fs.existsSync(METADATA_FILE),
+  tokens: fs.existsSync(TOKENS_FILE)
+});
 
 // 確保資料目錄存在
 if (!fs.existsSync(DATA_DIR)) {
@@ -65,12 +72,18 @@ let tokens = loadData(TOKENS_FILE, {});
 // 載入資料函數
 function loadData(filePath, defaultValue) {
   try {
+    console.log(`🔍 嘗試載入: ${filePath}`);
     if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      console.log(`✅ 成功載入: ${filePath}, 資料筆數: ${Object.keys(data).length}`);
+      return data;
+    } else {
+      console.log(`⚠️ 檔案不存在: ${filePath}`);
     }
   } catch (error) {
-    console.error(`載入 ${filePath} 失敗:`, error);
+    console.error(`❌ 載入 ${filePath} 失敗:`, error.message);
   }
+  console.log(`🔄 使用預設值: ${filePath}`);
   return defaultValue;
 }
 
