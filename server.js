@@ -49,6 +49,13 @@ const WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
 const METADATA_FILE = path.join(DATA_DIR, 'metadata.json');
 const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
 
+console.log('📁 資料目錄:', DATA_DIR);
+console.log('📄 檔案存在:', {
+  workflows: fs.existsSync(WORKFLOWS_FILE),
+  metadata: fs.existsSync(METADATA_FILE),
+  tokens: fs.existsSync(TOKENS_FILE)
+});
+
 // 確保資料目錄存在
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR);
