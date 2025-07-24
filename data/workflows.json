@@ -383,45 +383,6 @@
         "className": "node-line-reply",
         "sourcePosition": "right",
         "targetPosition": "left"
-      },
-      {
-        "id": "switch-1753081664952",
-        "type": "default",
-        "position": {
-          "x": 220,
-          "y": 265
-        },
-        "data": {
-          "label": "Switch分支",
-          "type": "switch",
-          "switchField": "{message}",
-          "cases": [
-            {
-              "value": "你好",
-              "label": "問候"
-            },
-            {
-              "value": "和潤",
-              "label": "告別"
-            },
-            {
-              "value": "貸款",
-              "label": ""
-            }
-          ],
-          "defaultCase": "其他"
-        },
-        "className": "node-switch",
-        "sourcePosition": "right",
-        "targetPosition": "left",
-        "width": 180,
-        "height": 41,
-        "selected": true,
-        "positionAbsolute": {
-          "x": 220,
-          "y": 265
-        },
-        "dragging": false
       }
     ],
     "edges": [
@@ -498,32 +459,64 @@
         "animated": true,
         "source": "webhook-trigger-1752217035067",
         "sourceHandle": null,
-        "target": "switch-1753081664952",
+        "target": "condition-1752217130538",
         "targetHandle": null,
         "data": {
           "active": true
         },
         "label": "",
-        "id": "reactflow__edge-webhook-trigger-1752217035067-switch-1753081664952"
+        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752217130538"
       },
       {
         "style": {
-          "stroke": "#2196F3",
-          "strokeWidth": 4,
-          "strokeDasharray": "8,4"
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
         },
         "type": "smoothstep",
         "animated": true,
-        "source": "switch-1753081664952",
+        "source": "webhook-trigger-1752217035067",
         "sourceHandle": null,
-        "target": "line-carousel-1752211392228",
+        "target": "condition-1752217051986",
         "targetHandle": null,
         "data": {
-          "active": true,
-          "branch": "你好"
+          "active": true
         },
-        "label": "你好",
-        "id": "reactflow__edge-switch-1753081664952-line-carousel-1752211392228"
+        "label": "",
+        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752217051986"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "webhook-trigger-1752217035067",
+        "sourceHandle": null,
+        "target": "condition-1752198739159",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "label": "",
+        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752198739159"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "webhook-trigger-1752217035067",
+        "sourceHandle": null,
+        "target": "condition-1752198752087",
+        "targetHandle": null,
+        "data": {
+          "active": true
+        },
+        "label": "",
+        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752198752087"
       }
     ],
     "nodeGroups": {
