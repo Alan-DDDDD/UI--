@@ -8,8 +8,10 @@ const path = require('path');
 const app = express();
 
 app.use(cors({
-  origin: ['https://alan-ddddd.github.io', 'http://localhost:3000'],
-  credentials: true
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
