@@ -18,7 +18,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "data/**"
+      "includeFiles": "data/**",
+      "memory": 1024
     }
   }
 }

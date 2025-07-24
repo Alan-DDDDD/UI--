@@ -46,11 +46,34 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 資料檔案路徑
-const DATA_DIR = path.join(__dirname, '..', 'data');
-const WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
-const METADATA_FILE = path.join(DATA_DIR, 'metadata.json');
-const TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
+// 資料檔案路徑 - Vercel適配
+let DATA_DIR, WORKFLOWS_FILE, METADATA_FILE, TOKENS_FILE;
+
+// 嘗試不同的路徑配置
+const possiblePaths = [
+  path.join(__dirname, '..', 'data'),  // 本地開發
+  path.join(process.cwd(), 'data'),    // Vercel部署
+  path.join(__dirname, 'data')         // 備用路徑
+];
+
+for (const testPath of possiblePaths) {
+  if (fs.existsSync(testPath)) {
+    DATA_DIR = testPath;
+    break;
+  }
+}
+
+// 如果找不到資料目錄，使用預設路徑並創建
+if (!DATA_DIR) {
+  DATA_DIR = possiblePaths[1]; // 使用 process.cwd()
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+WORKFLOWS_FILE = path.join(DATA_DIR, 'workflows.json');
+METADATA_FILE = path.join(DATA_DIR, 'metadata.json');
+TOKENS_FILE = path.join(DATA_DIR, 'tokens.json');
 
 console.log('📁 資料目錄:', DATA_DIR);
 console.log('📄 檔案存在:', {
@@ -58,11 +81,6 @@ console.log('📄 檔案存在:', {
   metadata: fs.existsSync(METADATA_FILE),
   tokens: fs.existsSync(TOKENS_FILE)
 });
-
-// 確保資料目錄存在
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
 
 // 載入資料
 let workflows = loadData(WORKFLOWS_FILE, {});
