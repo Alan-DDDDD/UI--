@@ -11,8 +11,8 @@
 
 ### 後端部署  
 - **平台**: Vercel
-- **URL**: https://ui-seven-delta.vercel.app
-- **專案名稱**: ui-seven-delta
+- **URL**: https://ui-pi-rouge.vercel.app
+- **專案名稱**: ui-pi-rouge
 - **部署方式**: Git 自動部署 (推薦)
 
 ## 📁 專案結構
@@ -41,7 +41,7 @@ FlowBuilder/
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (window.location.hostname === 'localhost' ? 
     'http://localhost:3001' : 
-    'https://ui-seven-delta.vercel.app'
+    'https://ui-pi-rouge.vercel.app'
   );
 ```
 
@@ -62,7 +62,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://alan-ddddd.github.io',
-    'https://ui-seven-delta.vercel.app'
+    'https://ui-pi-rouge.vercel.app'
   ],
   credentials: true
 }));
@@ -135,7 +135,7 @@ vercel --prod --yes
 
 - 2024/12/19: 初始配置文件建立
 - 前端: GitHub Pages (alan-ddddd.github.io/UI--)
-- 後端: Vercel (ui-seven-delta.vercel.app)
+- 後端: Vercel (ui-pi-rouge.vercel.app)
 - CORS 配置已修正
 
 ---
