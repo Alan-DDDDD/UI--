@@ -41,7 +41,7 @@ FlowBuilder/
 export const API_BASE_URL = process.env.REACT_APP_API_URL || 
   (window.location.hostname === 'localhost' ? 
     'http://localhost:3001' : 
-    'https://ui-pi-rouge.vercel.app'
+    'https://ui-coral-eta-48.vercel.app'
   );
 ```
 
@@ -62,7 +62,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://alan-ddddd.github.io',
-    'https://ui-pi-rouge.vercel.app'
+    'https://ui-coral-eta-48.vercel.app'
   ],
   credentials: true
 }));
@@ -134,8 +134,9 @@ vercel --prod --yes
 ## 📝 更新記錄
 
 - 2024/12/19: 初始配置文件建立
+- 2025/07/25: 更新後端部署 URL
 - 前端: GitHub Pages (alan-ddddd.github.io/UI--)
-- 後端: Vercel (ui-pi-rouge.vercel.app)
+- 後端: Vercel (ui-coral-eta-48.vercel.app)
 - CORS 配置已修正
 
 ---
