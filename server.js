@@ -34,7 +34,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'https://alan-ddddd.github.io',
-    'https://ui-seven-delta.vercel.app'
+    'https://ui-pi-rouge.vercel.app'
   ],
   credentials: true
 }));
