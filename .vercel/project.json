@@ -1,0 +1,10 @@
+{
+  "projectId": "prj_3IQ2sarYCqWVRkKeK3t8FtyEwQGI",
+  "settings": {
+    "framework": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "installCommand": "npm install",
+    "devCommand": "npm start"
+  }
+}
