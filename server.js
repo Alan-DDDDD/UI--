@@ -30,7 +30,14 @@ class ExecutionState {
 
 const executionSessions = new Map();
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://alan-ddddd.github.io',
+    'https://ui-seven-delta.vercel.app'
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // 健康檢查端點
