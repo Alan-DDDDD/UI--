@@ -6,14 +6,16 @@
 - **平台**: GitHub Pages
 - **URL**: https://alan-ddddd.github.io/UI--
 - **倉庫**: alan-ddddd/UI--
-- **分支**: gh-pages (自動部署)
-- **建置工具**: React Scripts + gh-pages
+- **部署方式**: GitHub Actions 自動部署
+- **建置工具**: React Scripts
+- **狀態**: ✅ 正常運行
 
 ### 後端部署  
 - **平台**: Vercel
 - **URL**: https://ui-coral-eta-48.vercel.app
 - **專案名稱**: ui-coral-eta-48
-- **部署方式**: Git 自動部署 (推薦)
+- **部署方式**: Git 自動部署
+- **狀態**: ✅ 正常運行
 
 ## 📁 專案結構
 
@@ -72,6 +74,12 @@ app.use(cors({
 
 ### 前端部署
 ```bash
+# 自動部署 (推薦) - 推送到 Git 觸發 GitHub Actions
+git add .
+git commit -m "deploy: update application"
+git push
+
+# 手動部署 (備用)
 cd client
 npm run build
 npm run deploy
@@ -79,13 +87,10 @@ npm run deploy
 
 ### 後端部署
 ```bash
-# 推送到 Git 觸發自動部署 (推薦)
+# 推送到 Git 觸發自動部署
 git add .
-git commit -m "update backend"
+git commit -m "deploy: update application"
 git push
-
-# 或使用 Vercel CLI (需要先登入)
-vercel --prod --yes
 ```
 
 ## 🌐 API 端點

@@ -14,10 +14,9 @@ git push
 
 ### 2. 前端部署 (GitHub Pages)
 ```bash
-# 切換到 client 目錄並部署
-cd client
-npm run build
-npm run deploy
+# GitHub Actions 會自動處理前端部署
+# 無需額外操作，推送後自動觸發
+echo "前端將由 GitHub Actions 自動部署"
 ```
 
 ### 3. 驗證部署
