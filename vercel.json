@@ -10,5 +10,11 @@
     "server.js": {
       "runtime": "nodejs18.x"
     }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "master": true,
+      "gh-pages": false
+    }
   }
 }
