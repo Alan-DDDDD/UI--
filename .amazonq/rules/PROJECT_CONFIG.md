@@ -11,8 +11,8 @@
 
 ### 後端部署  
 - **平台**: Vercel
-- **URL**: https://ui-pi-rouge.vercel.app
-- **專案名稱**: ui-pi-rouge
+- **URL**: https://ui-coral-eta-48.vercel.app
+- **專案名稱**: ui-coral-eta-48
 - **部署方式**: Git 自動部署 (推薦)
 
 ## 📁 專案結構
