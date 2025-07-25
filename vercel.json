@@ -1,25 +1,8 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/webhook/(.*)",
-      "dest": "/api/index.js"
-    }
-  ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "data/**",
-      "memory": 1024
+      "runtime": "nodejs18.x"
     }
   }
 }
