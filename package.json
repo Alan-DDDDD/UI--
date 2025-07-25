@@ -1,6 +1,8 @@
 {
   "name": "flowbuilder-api",
   "version": "1.0.0",
+  "type": "commonjs",
+  "main": "server.js",
   "scripts": {
     "dev": "concurrently \"npm start\" \"cd client && npm start\"",
     "start": "node server.js",
