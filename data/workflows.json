@@ -416,13 +416,14 @@
         "targetHandle": null,
         "id": "reactflow__edge-condition-1752217051986-line-reply-1752217084530",
         "data": {
-          "active": true
+          "active": false
         },
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#FFD700",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
         },
-        "animated": true,
+        "animated": false,
         "selected": false
       },
       {
@@ -434,18 +435,17 @@
       },
       {
         "style": {
-          "stroke": "#FFD700",
-          "strokeWidth": 3,
-          "strokeDasharray": "5,5"
+          "stroke": "#4CAF50",
+          "strokeWidth": 3
         },
         "type": "smoothstep",
-        "animated": false,
+        "animated": true,
         "source": "condition-1752217051986",
         "sourceHandle": null,
         "target": "line-carousel-1752217063226",
         "targetHandle": null,
         "data": {
-          "active": false
+          "active": true
         },
         "id": "reactflow__edge-condition-1752217051986-line-carousel-1752217063226",
         "selected": false
@@ -503,17 +503,18 @@
       },
       {
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#FFD700",
+          "strokeWidth": 3,
+          "strokeDasharray": "5,5"
         },
         "type": "smoothstep",
-        "animated": true,
+        "animated": false,
         "source": "webhook-trigger-1752217035067",
         "sourceHandle": null,
         "target": "condition-1752198752087",
         "targetHandle": null,
         "data": {
-          "active": true
+          "active": false
         },
         "label": "",
         "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752198752087"
