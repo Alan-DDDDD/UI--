@@ -13,7 +13,7 @@
 - **平台**: Vercel
 - **URL**: https://ui-seven-delta.vercel.app
 - **專案名稱**: ui-seven-delta
-- **部署方式**: Git 自動部署或 vercel CLI
+- **部署方式**: Git 自動部署 (推薦)
 
 ## 📁 專案結構
 
@@ -79,13 +79,13 @@ npm run deploy
 
 ### 後端部署
 ```bash
-# 使用 Vercel CLI
-vercel --prod
-
-# 或推送到 Git (如果設定自動部署)
+# 推送到 Git 觸發自動部署 (推薦)
 git add .
 git commit -m "update backend"
 git push
+
+# 或使用 Vercel CLI (需要先登入)
+vercel --prod --yes
 ```
 
 ## 🌐 API 端點
