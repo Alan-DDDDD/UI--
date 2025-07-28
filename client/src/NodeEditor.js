@@ -319,20 +319,8 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
       }
     }
     
-    // 更新標籤
-    if (selectedNode.data.type === 'http-request' || selectedNode.data.type === 'line-push' || selectedNode.data.type === 'line-reply') {
-      updatedConfig.label = config.name || config.label || `${config.method} 請求`;
-    } else if (selectedNode.data.type === 'notification') {
-      updatedConfig.label = `通知：${config.message}`;
-    } else if (selectedNode.data.type === 'data-map') {
-      updatedConfig.label = config.name || '資料映射';
-    } else if (selectedNode.data.type === 'webhook-trigger') {
-      updatedConfig.label = config.name || 'Webhook觸發';
-    } else if (selectedNode.data.type === 'if-condition') {
-      const conditionCount = (config.conditions || []).length;
-      const logic = config.logic || 'AND';
-      updatedConfig.label = `IF條件 (${conditionCount}個 ${logic})`;
-    }
+    // 更新標籤 - 使用統一的 getNodeDisplayLabel 函數
+    // 這裡不需要手動設定 label，因為 updateNode 會呼叫 getNodeDisplayLabel
     
     // 確保LINE節點有正確的useDataFrom設定
     if (selectedNode.data.type === 'line-push' || selectedNode.data.type === 'line-reply') {
@@ -660,7 +648,7 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
               }}>
                 📝 條件設定
               </div>
-              {(config.conditions || [{field: '', operator: '==', value: ''}]).map((condition, index) => (
+              {(config.conditions && config.conditions.length > 0 ? config.conditions : [{field: '', operator: '==', value: ''}]).map((condition, index) => (
                 <div key={index} style={{
                   border: '1px solid #555', 
                   padding: '12px', 
@@ -681,11 +669,11 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
                     }}>
                       🔍 條件 {index + 1}
                     </span>
-                    {(config.conditions || []).length > 1 && (
+                    {(config.conditions && config.conditions.length > 1) && (
                       <button 
                         onClick={() => {
                           const newConditions = (config.conditions || []).filter((_, i) => i !== index);
-                          setConfig({...config, conditions: newConditions});
+                          setConfig({...config, conditions: newConditions.length > 0 ? newConditions : [{field: '', operator: '==', value: ''}]});
                         }}
                         style={{
                           background: '#dc3545', 
@@ -710,8 +698,9 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
                       placeholder="例如: {'{message}'}, {'{userId}'}"
                       value={condition.field || ''}
                       onChange={(e) => {
-                        const newConditions = [...(config.conditions || [])];
-                        newConditions[index] = {...condition, field: e.target.value};
+                        const currentConditions = config.conditions || [{field: '', operator: '==', value: ''}];
+                        const newConditions = [...currentConditions];
+                        newConditions[index] = {...(newConditions[index] || {}), field: e.target.value};
                         setConfig({...config, conditions: newConditions});
                       }}
                       style={{
@@ -734,8 +723,9 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
                     <select 
                       value={condition.operator || '=='}
                       onChange={(e) => {
-                        const newConditions = [...(config.conditions || [])];
-                        newConditions[index] = {...condition, operator: e.target.value};
+                        const currentConditions = config.conditions || [{field: '', operator: '==', value: ''}];
+                        const newConditions = [...currentConditions];
+                        newConditions[index] = {...(newConditions[index] || {}), operator: e.target.value};
                         setConfig({...config, conditions: newConditions});
                       }}
                       style={{
@@ -768,8 +758,9 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
                       placeholder="要比較的值"
                       value={condition.value || ''}
                       onChange={(e) => {
-                        const newConditions = [...(config.conditions || [])];
-                        newConditions[index] = {...condition, value: e.target.value};
+                        const currentConditions = config.conditions || [{field: '', operator: '==', value: ''}];
+                        const newConditions = [...currentConditions];
+                        newConditions[index] = {...(newConditions[index] || {}), value: e.target.value};
                         setConfig({...config, conditions: newConditions});
                       }}
                       style={{
@@ -1175,7 +1166,7 @@ function NodeEditor({ selectedNode, onUpdateNode, onDeleteNode, onClose, showNot
                   ...config, 
                   workflowId, 
                   workflowName,
-                  type: 'workflow-reference',
+                  type: 'existing-workflow',
                   label: `📋 ${workflowName}`,
                   paramMappings: config.paramMappings || []
                 });

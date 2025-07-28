@@ -474,14 +474,15 @@ function FlowWrapper() {
         'existing-workflow': { label: '現有流程', workflowId: '', workflowName: '請選擇流程', paramMappings: [] }
       };
 
+      const nodeData = defaultData[type] || { label: type };
       const newNode = {
         id: `${type}-${Date.now()}`,
         type: 'default',
         position,
         data: {
           type,
-          ...defaultData[type],
-          label: getNodeDisplayLabel(type, defaultData[type])
+          ...nodeData,
+          label: getNodeDisplayLabel(type, nodeData)
         },
         className: `node-${type}`,
         sourcePosition: 'right',
@@ -506,14 +507,15 @@ function FlowWrapper() {
       y: baseY + Math.floor(nodes.length / nodesPerRow) * spacingY
     };
     
+    const nodeData = { ...data };
     const newNode = {
       id: `${type}-${Date.now()}`,
       type: 'default',
       position,
       data: { 
-        label: getNodeDisplayLabel(type, data),
         type,
-        ...data
+        ...nodeData,
+        label: getNodeDisplayLabel(type, nodeData)
       },
       className: `node-${type}`,
       sourcePosition: 'right',
@@ -691,14 +693,49 @@ function FlowWrapper() {
         }
         return '條件判斷';
       
+      case 'if-condition':
+        const conditionCount = (data.conditions || []).length;
+        const logic = data.logic || 'AND';
+        return `IF條件 (${conditionCount}個 ${logic})`;
+      
+      case 'switch':
+        const caseCount = (data.cases || []).length;
+        return `Switch分支 (${caseCount}個選項)`;
+      
       case 'line-reply':
         const replyText = data.body?.messages?.[0]?.text || '';
         return `LINE回覆: ${replyText.substring(0, 15)}${replyText.length > 15 ? '...' : ''}`;
       
       case 'line-push':
         const pushText = data.body?.messages?.[0]?.text || '';
-        const pushTo = data.body?.to || '';
         return `LINE推送: ${pushText.substring(0, 15)}${pushText.length > 15 ? '...' : ''}`;
+      
+      case 'line-carousel':
+        const columnCount = data.body?.messages?.[0]?.template?.columns?.length || 0;
+        return `LINE多頁 (${columnCount}張卡片)`;
+      
+      case 'http-request':
+        const method = data.method || 'GET';
+        const url = data.url || '';
+        return `${method} ${url.substring(0, 20)}${url.length > 20 ? '...' : ''}`;
+      
+      case 'data-map':
+        const mappingCount = (data.mappings || []).length;
+        return `資料映射 (${mappingCount}個對應)`;
+      
+      case 'notification':
+        const message = data.message || '';
+        return `通知: ${message.substring(0, 15)}${message.length > 15 ? '...' : ''}`;
+      
+      case 'program-entry':
+        return data.name || '程式進入點';
+      
+      case 'webhook-trigger':
+        return data.name || 'Webhook觸發';
+      
+      case 'existing-workflow':
+      case 'workflow-reference':
+        return data.workflowName || '現有流程';
       
       default:
         return data.name || data.label || type;
@@ -833,9 +870,25 @@ function FlowWrapper() {
           return !node.data.url;
         case 'condition':
           return !node.data.field || !node.data.operator;
+        case 'if-condition':
+          return !node.data.conditions || node.data.conditions.length === 0 || 
+                 node.data.conditions.some(c => !c.field || !c.operator);
+        case 'switch':
+          return !node.data.switchField || !node.data.cases || node.data.cases.length === 0;
         case 'line-reply':
         case 'line-push':
           return !node.data.body?.messages?.[0]?.text;
+        case 'line-carousel':
+          return !node.data.body?.messages?.[0]?.template?.columns || 
+                 node.data.body.messages[0].template.columns.length === 0;
+        case 'notification':
+          return !node.data.message;
+        case 'data-map':
+          return !node.data.mappings || node.data.mappings.length === 0 || 
+                 node.data.mappings.some(m => !m.from || !m.to);
+        case 'existing-workflow':
+        case 'workflow-reference':
+          return !node.data.workflowId;
         default:
           return false;
       }
