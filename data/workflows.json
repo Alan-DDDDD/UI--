@@ -383,6 +383,189 @@
         "className": "node-line-reply",
         "sourcePosition": "right",
         "targetPosition": "left"
+      },
+      {
+        "id": "switch-1753081664952",
+        "type": "default",
+        "position": {
+          "x": 220,
+          "y": 265
+        },
+        "data": {
+          "label": "Switch分支",
+          "type": "switch",
+          "switchField": "{message}",
+          "cases": [
+            {
+              "value": "你好",
+              "label": "問候"
+            },
+            {
+              "value": "和潤",
+              "label": "告別"
+            },
+            {
+              "value": "貸款",
+              "label": ""
+            }
+          ],
+          "defaultCase": "其他"
+        },
+        "className": "node-switch",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 180,
+        "height": 41,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 220,
+          "y": 265
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-reply-1753672238727",
+        "type": "default",
+        "position": {
+          "x": 777,
+          "y": 643
+        },
+        "data": {
+          "label": "LINE回覆: 測試成功",
+          "type": "line-reply",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "text",
+                "text": "測試成功"
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn"
+        },
+        "className": "node-line-reply",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 777,
+          "y": 643
+        },
+        "dragging": false
+      },
+      {
+        "id": "condition-1753682038300",
+        "type": "default",
+        "position": {
+          "x": 557,
+          "y": 727
+        },
+        "data": {
+          "type": "condition",
+          "label": "條件: {message} contains 確定",
+          "field": "{message}",
+          "operator": "contains",
+          "value": "確定"
+        },
+        "className": "node-condition",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 58,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 557,
+          "y": 727
+        },
+        "dragging": false
+      },
+      {
+        "id": "line-reply-1753682056307",
+        "type": "default",
+        "position": {
+          "x": 786,
+          "y": 739
+        },
+        "data": {
+          "type": "line-reply",
+          "label": "LINE回覆: 測試{message}",
+          "name": "",
+          "url": "https://api.line.me/v2/bot/message/reply",
+          "method": "POST",
+          "useDataFrom": "custom",
+          "headers": {
+            "Authorization": "Bearer {alan_line_msg_access_tkn}",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "replyToken": "{replyToken}",
+            "messages": [
+              {
+                "type": "text",
+                "text": "測試{message}"
+              }
+            ]
+          },
+          "lineAccount": "alan_line_msg_access_tkn"
+        },
+        "className": "node-line-reply",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 57,
+        "selected": false,
+        "positionAbsolute": {
+          "x": 786,
+          "y": 739
+        },
+        "dragging": false
+      },
+      {
+        "id": "if-condition-1753683043883",
+        "type": "default",
+        "position": {
+          "x": 551.6021091295129,
+          "y": 638.0674872253044
+        },
+        "data": {
+          "type": "if-condition",
+          "label": "IF條件 (2個 OR)",
+          "conditions": [
+            {
+              "field": "{message}",
+              "operator": ">",
+              "value": "10"
+            },
+            {
+              "field": "{message}",
+              "operator": "<",
+              "value": "5"
+            }
+          ],
+          "logic": "OR"
+        },
+        "className": "node-if-condition",
+        "sourcePosition": "right",
+        "targetPosition": "left",
+        "width": 150,
+        "height": 41,
+        "selected": true,
+        "positionAbsolute": {
+          "x": 551.6021091295129,
+          "y": 638.0674872253044
+        },
+        "dragging": false
       }
     ],
     "edges": [
@@ -459,65 +642,165 @@
         "animated": true,
         "source": "webhook-trigger-1752217035067",
         "sourceHandle": null,
-        "target": "condition-1752217130538",
+        "target": "switch-1753081664952",
         "targetHandle": null,
         "data": {
           "active": true
         },
         "label": "",
-        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752217130538"
+        "id": "reactflow__edge-webhook-trigger-1752217035067-switch-1753081664952"
       },
       {
         "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
+          "stroke": "#2196F3",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
         },
         "type": "smoothstep",
         "animated": true,
-        "source": "webhook-trigger-1752217035067",
-        "sourceHandle": null,
-        "target": "condition-1752217051986",
-        "targetHandle": null,
-        "data": {
-          "active": true
-        },
-        "label": "",
-        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752217051986"
-      },
-      {
-        "style": {
-          "stroke": "#4CAF50",
-          "strokeWidth": 3
-        },
-        "type": "smoothstep",
-        "animated": true,
-        "source": "webhook-trigger-1752217035067",
+        "source": "switch-1753081664952",
         "sourceHandle": null,
         "target": "condition-1752198739159",
         "targetHandle": null,
         "data": {
-          "active": true
+          "active": true,
+          "branch": "你好"
         },
-        "label": "",
-        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752198739159"
+        "label": "你好",
+        "id": "reactflow__edge-switch-1753081664952-condition-1752198739159"
       },
       {
         "style": {
-          "stroke": "#FFD700",
-          "strokeWidth": 3,
-          "strokeDasharray": "5,5"
+          "stroke": "#2196F3",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
         },
         "type": "smoothstep",
-        "animated": false,
-        "source": "webhook-trigger-1752217035067",
+        "animated": true,
+        "source": "switch-1753081664952",
+        "sourceHandle": null,
+        "target": "condition-1752217051986",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "和潤"
+        },
+        "label": "和潤",
+        "id": "reactflow__edge-switch-1753081664952-condition-1752217051986"
+      },
+      {
+        "style": {
+          "stroke": "#2196F3",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "switch-1753081664952",
+        "sourceHandle": null,
+        "target": "condition-1752217130538",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "貸款"
+        },
+        "label": "貸款",
+        "id": "reactflow__edge-switch-1753081664952-condition-1752217130538"
+      },
+      {
+        "style": {
+          "stroke": "#FF9800",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "switch-1753081664952",
         "sourceHandle": null,
         "target": "condition-1752198752087",
         "targetHandle": null,
         "data": {
-          "active": false
+          "active": true,
+          "branch": "default"
         },
-        "label": "",
-        "id": "reactflow__edge-webhook-trigger-1752217035067-condition-1752198752087"
+        "label": "🛡️",
+        "id": "reactflow__edge-switch-1753081664952-condition-1752198752087"
+      },
+      {
+        "style": {
+          "stroke": "#FF9800",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "switch-1753081664952",
+        "sourceHandle": null,
+        "target": "condition-1753682038300",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "default"
+        },
+        "label": "🛡️",
+        "id": "reactflow__edge-switch-1753081664952-condition-1753682038300"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "condition-1753682038300",
+        "sourceHandle": null,
+        "target": "line-reply-1753682056307",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "true"
+        },
+        "label": "✅",
+        "id": "reactflow__edge-condition-1753682038300-line-reply-1753682056307"
+      },
+      {
+        "style": {
+          "stroke": "#FF9800",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "switch-1753081664952",
+        "sourceHandle": null,
+        "target": "if-condition-1753683043883",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "default"
+        },
+        "label": "🛡️",
+        "id": "reactflow__edge-switch-1753081664952-if-condition-1753683043883"
+      },
+      {
+        "style": {
+          "stroke": "#4CAF50",
+          "strokeWidth": 4,
+          "strokeDasharray": "8,4"
+        },
+        "type": "smoothstep",
+        "animated": true,
+        "source": "if-condition-1753683043883",
+        "sourceHandle": null,
+        "target": "line-reply-1753672238727",
+        "targetHandle": null,
+        "data": {
+          "active": true,
+          "branch": "true"
+        },
+        "label": "✅",
+        "id": "reactflow__edge-if-condition-1753683043883-line-reply-1753672238727"
       }
     ],
     "nodeGroups": {

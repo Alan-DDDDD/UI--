@@ -1800,13 +1800,26 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                                   context[branchNode.id] = branchResult.data;
                                   context._lastResult = branchResult;
                                   
-                                  // 如果是條件節點且結果為 true，繼續執行連接的節點
-                                  if (branchNode.data.type === 'condition' && branchResult.data === true) {
-                                    console.log(`✅ 條件節點 ${branchNode.id} 為 true，繼續執行連接的節點`);
+                                  // 如果是條件節點或IF條件節點，根據結果繼續執行
+                                  if ((branchNode.data.type === 'condition' && branchResult.data === true) ||
+                                      (branchNode.data.type === 'if-condition' && branchResult.branch)) {
+                                    console.log(`✅ 條件節點 ${branchNode.id} 結果為 ${branchResult.data || branchResult.branch}，繼續執行連接的節點`);
                                     
-                                    const conditionActionEdges = workflow.edges.filter(e => 
-                                      e.source === branchNode.id && e.data?.active !== false
-                                    );
+                                    // 對於IF條件節點，需要根據分支選擇邊
+                                    let conditionActionEdges;
+                                    if (branchNode.data.type === 'if-condition') {
+                                      conditionActionEdges = workflow.edges.filter(e => 
+                                        e.source === branchNode.id && 
+                                        e.data?.active !== false &&
+                                        (e.data?.branch === branchResult.branch || (!e.data?.branch && branchResult.branch === 'true'))
+                                      );
+                                    } else {
+                                      conditionActionEdges = workflow.edges.filter(e => 
+                                        e.source === branchNode.id && e.data?.active !== false
+                                      );
+                                    }
+                                    
+                                    console.log(`🔀 找到 ${conditionActionEdges.length} 條 ${branchResult.branch || 'true'} 分支邊`);
                                     
                                     for (const conditionActionEdge of conditionActionEdges) {
                                       const conditionActionNode = workflow.nodes.find(n => n.id === conditionActionEdge.target);
@@ -1897,13 +1910,26 @@ app.post('/webhook/line/:workflowId', async (req, res) => {
                               context[branchNode.id] = branchResult.data;
                               context._lastResult = branchResult;
                               
-                              // 如果是條件節點且結果為 true，繼續執行連接的節點
-                              if (branchNode.data.type === 'condition' && branchResult.data === true) {
-                                console.log(`✅ 條件節點 ${branchNode.id} 為 true，繼續執行連接的節點`);
+                              // 如果是條件節點或IF條件節點，根據結果繼續執行
+                              if ((branchNode.data.type === 'condition' && branchResult.data === true) ||
+                                  (branchNode.data.type === 'if-condition' && branchResult.branch)) {
+                                console.log(`✅ 條件節點 ${branchNode.id} 結果為 ${branchResult.data || branchResult.branch}，繼續執行連接的節點`);
                                 
-                                const conditionActionEdges = workflow.edges.filter(e => 
-                                  e.source === branchNode.id && e.data?.active !== false
-                                );
+                                // 對於IF條件節點，需要根據分支選擇邊
+                                let conditionActionEdges;
+                                if (branchNode.data.type === 'if-condition') {
+                                  conditionActionEdges = workflow.edges.filter(e => 
+                                    e.source === branchNode.id && 
+                                    e.data?.active !== false &&
+                                    (e.data?.branch === branchResult.branch || (!e.data?.branch && branchResult.branch === 'true'))
+                                  );
+                                } else {
+                                  conditionActionEdges = workflow.edges.filter(e => 
+                                    e.source === branchNode.id && e.data?.active !== false
+                                  );
+                                }
+                                
+                                console.log(`🔀 找到 ${conditionActionEdges.length} 條 ${branchResult.branch || 'true'} 分支邊`);
                                 
                                 for (const conditionActionEdge of conditionActionEdges) {
                                   const conditionActionNode = workflow.nodes.find(n => n.id === conditionActionEdge.target);

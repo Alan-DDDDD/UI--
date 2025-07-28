@@ -77,3 +77,9 @@
   color: white !important;
   min-width: 180px !important;
 }
+
+.react-flow__node.node-switch {
+  background: #f59e0b !important;
+  border-color: #fbbf24 !important;
+  color: white !important;
+}
